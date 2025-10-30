@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ManagedCode.Presidio.PythonBridge</RootNamespace>
+    <AssemblyName>ManagedCode.Presidio.PythonBridge</AssemblyName>
+    <Description>ManagedCode Presidio bridge utilities for locating the reference python implementation.</Description>
+    <PackageTags>managedcode;presidio;python;bridge;pii</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

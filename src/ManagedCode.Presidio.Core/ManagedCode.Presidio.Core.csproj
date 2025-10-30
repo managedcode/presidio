@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ManagedCode.Presidio.Core</RootNamespace>
+    <AssemblyName>ManagedCode.Presidio.Core</AssemblyName>
+    <Description>ManagedCode Presidio core abstractions shared across analyzer and anonymizer pipelines.</Description>
+    <PackageTags>managedcode;presidio;pii;privacy</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

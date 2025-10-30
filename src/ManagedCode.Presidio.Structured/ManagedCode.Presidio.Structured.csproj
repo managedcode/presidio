@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ManagedCode.Presidio.Structured</RootNamespace>
+    <AssemblyName>ManagedCode.Presidio.Structured</AssemblyName>
+    <Description>ManagedCode Presidio helpers for anonymizing structured and semi-structured data.</Description>
+    <PackageTags>managedcode;presidio;structured data;pii;privacy</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
+    <ProjectReference Include="../ManagedCode.Presidio.Analyzer/ManagedCode.Presidio.Analyzer.csproj" />
+    <ProjectReference Include="../ManagedCode.Presidio.Anonymizer/ManagedCode.Presidio.Anonymizer.csproj" />
+    <ProjectReference Include="../ManagedCode.Presidio.PythonBridge/ManagedCode.Presidio.PythonBridge.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" />
+    <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

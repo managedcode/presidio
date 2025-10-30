@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ManagedCode.Presidio.Analyzer</RootNamespace>
+    <AssemblyName>ManagedCode.Presidio.Analyzer</AssemblyName>
+    <Description>ManagedCode Presidio analyzer framework for detecting PII entities.</Description>
+    <PackageTags>managedcode;presidio;analyzer;pii;privacy</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
+    <ProjectReference Include="../ManagedCode.Presidio.PythonBridge/ManagedCode.Presidio.PythonBridge.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>
