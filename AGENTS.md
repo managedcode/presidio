@@ -30,6 +30,13 @@ Update guidelines:
 
 ## Rules To Follow
 - for Presidio migration tasks, ALWAYS mirror functionality, tests, and docs from `external/microsoft-presidio` to guarantee parity
+- for Presidio migration tasks, NEVER rely on stubs, mocks, or placeholder implementations; deliver the full real functionality
+- for Presidio migration NLP components, use `Microsoft.ML.Tokenizers` when implementing tokenization
+- for Presidio migration tasks, eliminate dependencies on `ManagedCode.Presidio.PythonBridge`; port required logic to C#
+- when selecting dependencies, prefer official NuGet packages under permissive licenses (MIT) that match upstream functionality
+- integration tests must cover real data from the original Python project to verify parity; ensure all tests pass without hacks
+- for Presidio analyzer tests, NEVER add stubbed recognizer tests; port the Python scenarios to exercise the real analyzer pipeline end-to-end
+- for Presidio analyzer parity work, keep iterating without pausing for confirmation and focus solely on integration tests that validate real functionality
 - use enums and constants over magic strings and numbers
 - for .NET work, always run `dotnet format` before `dotnet test` and confirm the suite passes
 - avoid template placeholders (e.g., `Class1.cs`, `UnitTest1.cs`); name files and types according to their real domain purpose
@@ -39,10 +46,9 @@ Update guidelines:
 ## Solution Layout
 
 - `src/ManagedCode.Presidio.Core` – foundational domain objects such as `TextSpan`, `AnalysisExplanation`, `RecognizerResult`, and shared metadata keys.
-- `src/ManagedCode.Presidio.Analyzer` – analyzer abstractions (`EntityRecognizer`, `NlpArtifacts`, `Token`) with lazy-loading recognizer lifecycle management.
+- `src/ManagedCode.Presidio.Analyzer` – analyzer abstractions (`EntityRecognizer`, `NlpArtifacts`, `Token`) with lazy-loading recognizer lifecycle management and ONNX-backed NER.
 - `src/ManagedCode.Presidio.Anonymizer` – anonymization primitives (`PiiEntity`, `OperatorConfig`, `OperatorResult`, `EngineResult`) mirroring the Python engine contracts.
 - `src/ManagedCode.Presidio.ImageRedactor` / `src/ManagedCode.Presidio.Structured` – placeholders for their respective pipelines.
-- `src/ManagedCode.Presidio.PythonBridge` – utilities for locating and interacting with the upstream Python repository.
 - `tests/*` – unit and integration suites covering the C# modules (including parity tests against Python behaviours).
 
 ## Current Status

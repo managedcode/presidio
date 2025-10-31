@@ -25,6 +25,8 @@ public sealed class RecognizerResult(
             ? new Dictionary<string, object?>()
             : new Dictionary<string, object?>(metadata);
 
+    public IDictionary<string, object?> RecognitionMetadata => Metadata;
+
     public int Start => Span.Start;
 
     public int End => Span.End;
@@ -35,6 +37,11 @@ public sealed class RecognizerResult(
     {
         Score = score;
         AnalysisExplanation?.SetImprovedScore(score);
+    }
+
+    public void ClearAnalysisExplanation()
+    {
+        AnalysisExplanation = null;
     }
 
     public void AppendAnalysisExplanationText(string text)
@@ -153,6 +160,64 @@ public sealed class RecognizerResult(
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
         return left.CompareTo(right) >= 0;
+    }
+
+    public void SetMetadata(string key, object? value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        Metadata[key] = value;
+    }
+
+    public bool TryGetMetadata<T>(string key, out T? value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        if (Metadata.TryGetValue(key, out var existing) && existing is T castValue)
+        {
+            value = castValue;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public static IReadOnlyCollection<RecognizerResult> RemoveDuplicates(IEnumerable<RecognizerResult> results)
+    {
+        ArgumentNullException.ThrowIfNull(results);
+
+        var unique = results.Where(result => result is not null).Distinct().Select(result => result!).ToList();
+        var ordered = unique
+            .OrderByDescending(result => result.Score)
+            .ThenBy(result => result.Start)
+            .ThenByDescending(result => result.Length)
+            .ToList();
+
+        var filtered = new List<RecognizerResult>();
+        foreach (var candidate in ordered)
+        {
+            if (candidate.Score <= 0)
+            {
+                continue;
+            }
+
+            var shouldKeep = true;
+            foreach (var existing in filtered)
+            {
+                if (candidate.IsContainedIn(existing) &&
+                    string.Equals(candidate.EntityType, existing.EntityType, StringComparison.Ordinal))
+                {
+                    shouldKeep = false;
+                    break;
+                }
+            }
+
+            if (shouldKeep)
+            {
+                filtered.Add(candidate);
+            }
+        }
+
+        return filtered;
     }
 
     public static RecognizerResult FromDictionary(IReadOnlyDictionary<string, object?> data)

@@ -12,7 +12,6 @@
     <ProjectReference Include="../ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
     <ProjectReference Include="../ManagedCode.Presidio.Analyzer/ManagedCode.Presidio.Analyzer.csproj" />
     <ProjectReference Include="../ManagedCode.Presidio.Anonymizer/ManagedCode.Presidio.Anonymizer.csproj" />
-    <ProjectReference Include="../ManagedCode.Presidio.PythonBridge/ManagedCode.Presidio.PythonBridge.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" />

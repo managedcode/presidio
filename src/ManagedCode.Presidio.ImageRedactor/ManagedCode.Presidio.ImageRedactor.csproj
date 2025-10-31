@@ -10,7 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
-    <ProjectReference Include="../ManagedCode.Presidio.PythonBridge/ManagedCode.Presidio.PythonBridge.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
