@@ -121,6 +121,63 @@ public sealed class OnnxAnalyzerIntegrationTests
     }
 
     [Fact]
+    public void OnnxModelRegexAllowListRespectsCaseSensitivity()
+    {
+        const string sample = "My name is Sharon and I live in Seattle.";
+
+        using var engine = new AnalyzerEngine();
+        var insensitive = engine.Analyze(
+                sample,
+                "en",
+                allowList: new[] { "SHARON", "SEATTLE" },
+                allowListMatch: AllowListMatch.Regex,
+                regexOptions: RegexOptions.IgnoreCase)
+            .ToList();
+
+        Assert.Empty(insensitive);
+
+        var sensitive = engine.Analyze(
+                sample,
+                "en",
+                allowList: new[] { "SHARON", "SEATTLE" },
+                allowListMatch: AllowListMatch.Regex,
+                regexOptions: RegexOptions.None)
+            .ToList();
+
+        Assert.Contains(sensitive, r => Slice(sample, r).Equals("Sharon", StringComparison.Ordinal));
+        Assert.Contains(sensitive, r => Slice(sample, r).Equals("Seattle", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("uk")]
+    [InlineData("ja")]
+    [InlineData("ko")]
+    [InlineData("fr")]
+    public void OnnxModelRejectsUnsupportedLanguages(string language)
+    {
+        using var engine = new AnalyzerEngine();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => engine.Analyze("Sample text", language).ToList());
+        Assert.Contains("No matching recognizers", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Je m'appelle François Dupont and I live in Paris.", "Paris")]
+    [InlineData("Мій колега Олександр відвідав Київ.", "Київ")]
+    [InlineData("私の同僚 Sato works in Tokyo.", "Tokyo")]
+    [InlineData("My friend 민준 lives in Seoul.", "Seoul")]
+    public void OnnxModelDetectsLocationsWithinInternationalText(string text, string expectedLocation)
+    {
+        using var engine = new AnalyzerEngine();
+        var results = engine.Analyze(text, "en").ToList();
+
+        var expectedIndex = text.IndexOf(expectedLocation, StringComparison.OrdinalIgnoreCase);
+        Assert.True(expectedIndex >= 0, $"Sample text does not contain expected location '{expectedLocation}'.");
+
+        Assert.Contains(results, r => r.EntityType == "LOCATION");
+    }
+
+    [Fact]
     public void OnnxModelClearsAnalysisExplanationByDefault()
     {
         const string sample = "My name is Sharon and I live in Seattle.";

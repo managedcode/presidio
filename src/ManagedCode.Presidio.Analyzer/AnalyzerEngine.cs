@@ -54,10 +54,7 @@ public sealed class AnalyzerEngine : IDisposable
             _registry = registry;
         }
 
-        if (_registry.RegisteredRecognizers.Count == 0)
-        {
-            _registry.LoadPredefinedRecognizers(_nlpEngine, _supportedLanguages);
-        }
+        _registry.LoadPredefinedRecognizers(_nlpEngine, _supportedLanguages);
 
         _contextAwareEnhancer = contextAwareEnhancer ?? new LemmaContextAwareEnhancer();
     }

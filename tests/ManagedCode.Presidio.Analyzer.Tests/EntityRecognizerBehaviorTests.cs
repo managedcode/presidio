@@ -48,6 +48,35 @@ public sealed class EntityRecognizerBehaviorTests
         Assert.Equal(expected, output);
     }
 
+    [Fact]
+    public void ToDictionaryReflectsRecognizerConfiguration()
+    {
+        var recognizer = new TestRecognizer();
+
+        var dictionary = recognizer.ToDictionary();
+
+        Assert.Equal(new[] { "ENTITY" }, dictionary[nameof(EntityRecognizer.SupportedEntities)]);
+        Assert.Equal("en", dictionary[nameof(EntityRecognizer.SupportedLanguage)]);
+        Assert.Equal("TestRecognizer", dictionary[nameof(EntityRecognizer.Name)]);
+        Assert.Equal("0.0.1", dictionary[nameof(EntityRecognizer.Version)]);
+    }
+
+    private sealed class TestRecognizer : EntityRecognizer
+    {
+        public TestRecognizer()
+            : base(new[] { "ENTITY" })
+        {
+        }
+
+        protected override IReadOnlyCollection<RecognizerResult> AnalyzeCore(
+            string text,
+            IReadOnlyCollection<string> entities,
+            NlpArtifacts artifacts)
+        {
+            return Array.Empty<RecognizerResult>();
+        }
+    }
+
     private static RecognizerResult CreateResult(string entity, double score, int start, int end)
     {
         var explanation = new AnalysisExplanation("test", 0, patternName: "test", pattern: "test");

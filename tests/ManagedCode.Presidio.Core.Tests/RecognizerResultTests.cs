@@ -162,6 +162,53 @@ public sealed class RecognizerResultTests
         Assert.Equal(32, result.Length);
     }
 
+    [Fact]
+    public void RemoveDuplicatesPrefersHigherScore()
+    {
+        var low = CreateResult("ENTITY", 0.2, 0, 5);
+        var high = CreateResult("ENTITY", 0.9, 0, 5);
+
+        var reduced = RecognizerResult.RemoveDuplicates(new[] { low, high });
+
+        var single = Assert.Single(reduced);
+        Assert.Same(high, single);
+    }
+
+    [Fact]
+    public void RemoveDuplicatesKeepsDifferentEntities()
+    {
+        var first = CreateResult("ENTITY_A", 0.5, 0, 5);
+        var second = CreateResult("ENTITY_B", 0.6, 0, 5);
+
+        var reduced = RecognizerResult.RemoveDuplicates(new[] { first, second });
+
+        Assert.Equal(2, reduced.Count);
+    }
+
+    [Fact]
+    public void RemoveDuplicatesPrefersWiderSpanWhenScoresEqual()
+    {
+        var outer = CreateResult("ENTITY", 0.7, 0, 10);
+        var inner = CreateResult("ENTITY", 0.7, 0, 5);
+
+        var reduced = RecognizerResult.RemoveDuplicates(new[] { outer, inner });
+
+        var single = Assert.Single(reduced);
+        Assert.Same(outer, single);
+    }
+
+    [Fact]
+    public void RemoveDuplicatesEliminatesZeroScores()
+    {
+        var valid = CreateResult("ENTITY", 0.6, 0, 5);
+        var zero = CreateResult("ENTITY", 0, 0, 5);
+
+        var reduced = RecognizerResult.RemoveDuplicates(new[] { valid, zero });
+
+        var single = Assert.Single(reduced);
+        Assert.Same(valid, single);
+    }
+
     private static RecognizerResult CreateResult(string entityType, double score, int start, int end)
     {
         var span = new TextSpan(start, end);
