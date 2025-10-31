@@ -128,6 +128,11 @@ public sealed class RecognizerRegistry
                 {
                     AddRecognizer(new EmailRecognizer());
                 }
+
+                if (!_recognizers.Any(r => r is DateRecognizer existingDate && string.Equals(existingDate.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new DateRecognizer());
+                }
             }
         }
     }

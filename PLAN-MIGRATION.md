@@ -27,7 +27,7 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | IBAN | `predefined_recognizers/generic/iban_recognizer.py` + `iban_patterns.py` | ✅ | Country regex map + checksum (`IbanRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/IbanRecognizerTests.cs` |
 | ABA Routing | `predefined_recognizers/country_specific/us/aba_routing_recognizer.py` | ✅ | Checksum + formatting (`AbaRoutingRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/AbaRoutingRecognizerTests.cs` |
 | Crypto wallet | `predefined_recognizers/generic/crypto_recognizer.py` | ✅ | Base58 + Bech32 validation (`CryptoRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/CryptoRecognizerTests.cs` |
-| Date | `predefined_recognizers/generic/date_recognizer.py` | 🚧 | | |
+| Date | `predefined_recognizers/generic/date_recognizer.py` | ✅ | Regex suite covering ISO, slash/dash, and month formats (`DateRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/DateRecognizerTests.cs` |
 | Email | `predefined_recognizers/generic/email_recognizer.py` | ✅ | Regex + domain validation (`EmailRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/EmailRecognizerTests.cs` |
 | IP address | `predefined_recognizers/generic/ip_recognizer.py` | 🚧 | | |
 | Phone | `predefined_recognizers/generic/phone_recognizer.py` | 🚧 | Depends on libphonenumber parity | |
