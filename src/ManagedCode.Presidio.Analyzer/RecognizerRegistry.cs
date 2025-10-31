@@ -118,6 +118,16 @@ public sealed class RecognizerRegistry
                 {
                     AddRecognizer(new AbaRoutingRecognizer());
                 }
+
+                if (!_recognizers.Any(r => r is CryptoRecognizer existingCrypto && string.Equals(existingCrypto.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new CryptoRecognizer());
+                }
+
+                if (!_recognizers.Any(r => r is EmailRecognizer existingEmail && string.Equals(existingEmail.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new EmailRecognizer());
+                }
             }
         }
     }
