@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="Microsoft.ML.Tokenizers" />
+    <PackageReference Include="libphonenumber-csharp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />

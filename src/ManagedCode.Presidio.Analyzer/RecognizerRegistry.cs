@@ -133,6 +133,21 @@ public sealed class RecognizerRegistry
                 {
                     AddRecognizer(new DateRecognizer());
                 }
+
+                if (!_recognizers.Any(r => r is IpRecognizer existingIp && string.Equals(existingIp.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new IpRecognizer());
+                }
+
+                if (!_recognizers.Any(r => r is UrlRecognizer existingUrl && string.Equals(existingUrl.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new UrlRecognizer());
+                }
+
+                if (!_recognizers.Any(r => r is PhoneRecognizer existingPhone && string.Equals(existingPhone.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new PhoneRecognizer());
+                }
             }
         }
     }

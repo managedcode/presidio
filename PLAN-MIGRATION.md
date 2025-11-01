@@ -29,9 +29,9 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | Crypto wallet | `predefined_recognizers/generic/crypto_recognizer.py` | ✅ | Base58 + Bech32 validation (`CryptoRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/CryptoRecognizerTests.cs` |
 | Date | `predefined_recognizers/generic/date_recognizer.py` | ✅ | Regex suite covering ISO, slash/dash, and month formats (`DateRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/DateRecognizerTests.cs` |
 | Email | `predefined_recognizers/generic/email_recognizer.py` | ✅ | Regex + domain validation (`EmailRecognizer`) | `tests/ManagedCode.Presidio.Analyzer.Tests/EmailRecognizerTests.cs` |
-| IP address | `predefined_recognizers/generic/ip_recognizer.py` | 🚧 | | |
-| Phone | `predefined_recognizers/generic/phone_recognizer.py` | 🚧 | Depends on libphonenumber parity | |
-| URL | `predefined_recognizers/generic/url_recognizer.py` | 🚧 | | |
+| IP address | `predefined_recognizers/generic/ip_recognizer.py` | ✅ | Regex parity with `IpRecognizer` + `IPAddress` validation | `tests/ManagedCode.Presidio.Analyzer.Tests/IpRecognizerTests.cs` |
+| Phone | `predefined_recognizers/generic/phone_recognizer.py` | ✅ | Uses `PhoneRecognizer` backed by libphonenumber (`PhoneNumbers`) | `tests/ManagedCode.Presidio.Analyzer.Tests/PhoneRecognizerTests.cs` |
+| URL | `predefined_recognizers/generic/url_recognizer.py` | ✅ | CommonRegex port (`UrlRecognizer`) with schema/non-schema support | `tests/ManagedCode.Presidio.Analyzer.Tests/UrlRecognizerTests.cs` |
 
 ## Country-Specific Recognizers
 
@@ -67,7 +67,7 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 
 ## Next Actions
 
-- Prioritize remaining generic recognizers (Email, IP, URL, Date, Phone).
+- Begin porting country-specific recognizers (prioritize high-demand markets) now that the generic suite is complete in C#.
 - Triage country-specific recognizers based on customer demand.
 - Flesh out registry configuration loading (YAML) for parity with Python.
 - Plan for NLP engine parity (spaCy/Stanza/Transformers) or replacements.

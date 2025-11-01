@@ -37,6 +37,7 @@ Update guidelines:
 - integration tests must cover real data from the original Python project to verify parity; ensure all tests pass without hacks
 - for Presidio analyzer tests, NEVER add stubbed recognizer tests; port the Python scenarios to exercise the real analyzer pipeline end-to-end
 - for Presidio analyzer parity work, keep iterating without pausing for confirmation and focus solely on integration tests that validate real functionality
+- for Presidio migration tasks, do not stop to ask the user for clarification mid-task; follow the migration plan and deliver completed work
 - use enums and constants over magic strings and numbers
 - for .NET work, always run `dotnet format` before `dotnet test` and confirm the suite passes
 - avoid template placeholders (e.g., `Class1.cs`, `UnitTest1.cs`); name files and types according to their real domain purpose
