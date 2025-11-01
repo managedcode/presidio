@@ -38,6 +38,11 @@ Update guidelines:
 - for Presidio analyzer tests, NEVER add stubbed recognizer tests; port the Python scenarios to exercise the real analyzer pipeline end-to-end
 - for Presidio analyzer parity work, keep iterating without pausing for confirmation and focus solely on integration tests that validate real functionality
 - for Presidio migration tasks, do not stop to ask the user for clarification mid-task; follow the migration plan and deliver completed work
+- for Presidio migration tasks, when the user says "продовжити"/"continue", proceed through the target file step by step without asking for additional confirmation
+- for Presidio migration tasks, when you see a way to improve something, note the idea in the working file and then implement it without waiting for user approval
+- for Presidio migration tasks, default to continuing the migration workflow without waiting for "продовжити"/"continue"; halt only if the user explicitly redirects
+- for Presidio migration tasks, when the user specifies an execution order for follow-up work, honor that sequence without reconfirming and keep progressing task-by-task
+- for Presidio migration tasks, capture any important follow-up items directly in the working file as TODOs so they are not lost
 - for Presidio test work, ALWAYS include negative/error scenarios alongside positive cases to validate failure paths
 - for Presidio recognizer coverage, ensure EU social security numbers are handled alongside US SSN patterns
 - use enums and constants over magic strings and numbers

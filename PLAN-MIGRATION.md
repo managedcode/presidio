@@ -15,8 +15,8 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | `EntityRecognizer` base | `presidio_analyzer/entity_recognizer.py` | ✅ | Ported as `EntityRecognizer` (C#) |
 | `Pattern` helper | `predefined_recognizers/generic/pattern_recognizer.py` | ✅ | Implemented as `Pattern` (C#) |
 | `PatternRecognizer` | same | ✅ | Implemented with regex caching & validation hooks |
-| `LocalRecognizer` / remote base classes | `local_recognizer.py`, `remote_recognizer.py` | 🚧 | Not yet required; evaluate once we port remote recognizers |
-| `RecognizerRegistry` & provider | `recognizer_registry.py` | 🚧 | Basic functionality present; needs YAML loader + configuration parity |
+| `LocalRecognizer` / remote base classes | `local_recognizer.py`, `remote_recognizer.py` | ✅ | Ported as `LocalRecognizer`/`RemoteRecognizer` with unit coverage |
+| `RecognizerRegistry` & provider | `recognizer_registry.py` | ✅ | YAML-backed loader + reflective instantiation aligned with Python |
 | NLP engines (spaCy, transformers, etc.) | `nlp_engine/` | 🚧 | Only ONNX pipeline ported (`OnnxNlpEngine`) |
 
 ## Generic Recognizers
@@ -37,17 +37,17 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 
 | Country | Python Class | Status |
 | --- | --- | --- |
-| Australia | `AuAbnRecognizer`, `AuAcnRecognizer`, `AuMedicareRecognizer`, `AuTfnRecognizer` | 🚧 |
+| Australia | `AuAbnRecognizer`, `AuAcnRecognizer`, `AuMedicareRecognizer`, `AuTfnRecognizer` | ✅ |
 | Finland | `FiPersonalIdentityCodeRecognizer` | ✅ |
-| India | `InAadhaarRecognizer`, `InGstinRecognizer`, `InPanRecognizer`, `InPassportRecognizer`, `InVehicleRegistrationRecognizer`, `InVoterRecognizer` | 🚧 |
-| Italy | `ItDriverLicenseRecognizer`, `ItFiscalCodeRecognizer`, `ItIdentityCardRecognizer`, `ItPassportRecognizer`, `ItVatCodeRecognizer` | 🚧 |
-| Korea | `KrRrnRecognizer` | 🚧 |
+| India | `InAadhaarRecognizer`, `InGstinRecognizer`, `InPanRecognizer`, `InPassportRecognizer`, `InVehicleRegistrationRecognizer`, `InVoterRecognizer` | ✅ |
+| Italy | `ItDriverLicenseRecognizer`, `ItFiscalCodeRecognizer`, `ItIdentityCardRecognizer`, `ItPassportRecognizer`, `ItVatCodeRecognizer` | ✅ |
+| Korea | `KrRrnRecognizer` | ✅ |
 | Poland | `PlPeselRecognizer` | ✅ |
-| Singapore | `SgFinRecognizer`, `SgUenRecognizer` | 🚧 |
-| Spain | `EsNieRecognizer`, `EsNifRecognizer` | 🚧 |
-| Thailand | `ThTninRecognizer` | 🚧 |
-| UK | `NhsRecognizer`, `UkNinoRecognizer` | 🚧 |
-| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer` (🚧), `UsSsnRecognizer` (✅) | 🚧 |
+| Singapore | `SgFinRecognizer`, `SgUenRecognizer` | ✅ |
+| Spain | `EsNieRecognizer`, `EsNifRecognizer` | ✅ |
+| Thailand | `ThTninRecognizer` | ✅ |
+| UK | `NhsRecognizer`, `UkNinoRecognizer` | ✅ |
+| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer`, `UsSsnRecognizer` | ✅ |
 
 ## NLP Engine Recognizers
 
@@ -67,7 +67,6 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 
 ## Next Actions
 
-- Begin porting country-specific recognizers (prioritize high-demand markets) now that the generic suite is complete in C#.
-- Triage country-specific recognizers based on customer demand.
-- Flesh out registry configuration loading (YAML) for parity with Python.
-- Plan for NLP engine parity (spaCy/Stanza/Transformers) or replacements.
+- Continue porting any remaining country-specific recognizers not yet covered (e.g., Australia-specific business identifiers beyond the current scope, additional EU IDs, etc.).
+- Prioritize recognizer backlog based on customer demand and add coverage tests alongside each port.
+- Implement .NET equivalents for spaCy/Stanza/Transformers NLP engines or design alternative pipelines that meet parity guarantees.

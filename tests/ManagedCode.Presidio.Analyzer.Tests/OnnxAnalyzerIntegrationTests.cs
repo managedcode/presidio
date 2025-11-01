@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -17,34 +17,34 @@ public sealed class OnnxAnalyzerIntegrationTests
     public void OnnxModelRecognizesPersonAndLocationFromPythonTestFixture()
     {
         var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_analyzer_engine.py");
-        Assert.True(File.Exists(pythonTestPath));
+        File.Exists(pythonTestPath).ShouldBeTrue();
 
         var pythonContent = File.ReadAllText(pythonTestPath);
         const string sample = "My name is Sharon and I live in Seattle.";
-        Assert.Contains(sample, pythonContent, StringComparison.Ordinal);
+        pythonContent.ShouldContain(sample);
 
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en").ToList();
 
-        Assert.Contains(results, r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(results, r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
     public void OnnxModelRecognizesPersonAndLocationFromStanzaSample()
     {
         var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_stanza_nlp_engine.py");
-        Assert.True(File.Exists(pythonTestPath));
+        File.Exists(pythonTestPath).ShouldBeTrue();
 
         var pythonContent = File.ReadAllText(pythonTestPath);
         const string sample = "Barack Obama was born in Hawaii.";
-        Assert.Contains(sample, pythonContent, StringComparison.Ordinal);
+        pythonContent.ShouldContain(sample);
 
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en").ToList();
 
-        Assert.Contains(results, r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Barack Obama", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(results, r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Hawaii", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Barack Obama", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Hawaii", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -55,10 +55,14 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", PersonEntities).ToList();
 
-        Assert.NotEmpty(results);
-        Assert.All(results, r => Assert.Equal("PERSON", r.EntityType));
-        Assert.Contains(results, r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(results, r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
+        results.ShouldNotBeEmpty();
+        foreach (var result in results)
+        {
+            result.EntityType.ShouldBe("PERSON");
+        }
+
+        results.ShouldContain(r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
+        results.ShouldNotContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -69,8 +73,8 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", Array.Empty<string>()).ToList();
 
-        Assert.Contains(results, r => r.EntityType == "PERSON");
-        Assert.Contains(results, r => r.EntityType == "LOCATION");
+        results.ShouldContain(r => r.EntityType == "PERSON");
+        results.ShouldContain(r => r.EntityType == "LOCATION");
     }
 
     [Fact]
@@ -79,7 +83,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(string.Empty, "en").ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -87,8 +91,8 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         using var engine = new AnalyzerEngine();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => engine.Analyze("John lives in Berlin.", "de").ToList());
-        Assert.Contains("No matching recognizers", exception.Message, StringComparison.Ordinal);
+        var exception = Should.Throw<InvalidOperationException>(() => engine.Analyze("John lives in Berlin.", "de").ToList());
+        exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
     }
 
     [Fact]
@@ -99,8 +103,8 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", allowList: ExactAllowList).ToList();
 
-        Assert.DoesNotContain(results, r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(results, r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
+        results.ShouldNotContain(r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -117,7 +121,7 @@ public sealed class OnnxAnalyzerIntegrationTests
                 regexOptions: RegexOptions.IgnoreCase)
             .ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -134,7 +138,7 @@ public sealed class OnnxAnalyzerIntegrationTests
                 regexOptions: RegexOptions.IgnoreCase)
             .ToList();
 
-        Assert.Empty(insensitive);
+        insensitive.ShouldBeEmpty();
 
         var sensitive = engine.Analyze(
                 sample,
@@ -144,8 +148,8 @@ public sealed class OnnxAnalyzerIntegrationTests
                 regexOptions: RegexOptions.None)
             .ToList();
 
-        Assert.Contains(sensitive, r => Slice(sample, r).Equals("Sharon", StringComparison.Ordinal));
-        Assert.Contains(sensitive, r => Slice(sample, r).Equals("Seattle", StringComparison.Ordinal));
+        sensitive.ShouldContain(r => Slice(sample, r).Equals("Sharon", StringComparison.Ordinal));
+        sensitive.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.Ordinal));
     }
 
     [Theory]
@@ -157,8 +161,8 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         using var engine = new AnalyzerEngine();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => engine.Analyze("Sample text", language).ToList());
-        Assert.Contains("No matching recognizers", exception.Message, StringComparison.Ordinal);
+        var exception = Should.Throw<InvalidOperationException>(() => engine.Analyze("Sample text", language).ToList());
+        exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
     }
 
     [Theory]
@@ -172,9 +176,9 @@ public sealed class OnnxAnalyzerIntegrationTests
         var results = engine.Analyze(text, "en").ToList();
 
         var expectedIndex = text.IndexOf(expectedLocation, StringComparison.OrdinalIgnoreCase);
-        Assert.True(expectedIndex >= 0, $"Sample text does not contain expected location '{expectedLocation}'.");
+        expectedIndex.ShouldBeGreaterThanOrEqualTo(0, $"Sample text does not contain expected location '{expectedLocation}'.");
 
-        Assert.Contains(results, r => r.EntityType == "LOCATION");
+        results.ShouldContain(r => r.EntityType == "LOCATION");
     }
 
     [Fact]
@@ -185,8 +189,11 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en").ToList();
 
-        Assert.NotEmpty(results);
-        Assert.All(results, r => Assert.Null(r.AnalysisExplanation));
+        results.ShouldNotBeEmpty();
+        foreach (var result in results)
+        {
+            result.AnalysisExplanation.ShouldBeNull();
+        }
     }
 
     [Fact]
@@ -197,8 +204,11 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", returnDecisionProcess: true).ToList();
 
-        Assert.NotEmpty(results);
-        Assert.All(results, r => Assert.NotNull(r.AnalysisExplanation));
+        results.ShouldNotBeEmpty();
+        foreach (var result in results)
+        {
+            result.AnalysisExplanation.ShouldNotBeNull();
+        }
     }
 
     [Fact]
@@ -212,7 +222,7 @@ public sealed class OnnxAnalyzerIntegrationTests
 
         var filtered = engine.Analyze(sample, "en", scoreThreshold: strictThreshold).ToList();
 
-        Assert.Empty(filtered);
+        filtered.ShouldBeEmpty();
     }
 
     [Fact]
@@ -223,8 +233,8 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", allowList: NoMatchAllowList).ToList();
 
-        Assert.Contains(results, r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(results, r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
+        results.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -235,7 +245,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", allowList: AllEntitiesAllowList).ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -244,11 +254,11 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var recognizer = engine.GetRecognizers("en").OfType<OnnxNerRecognizer>().Single();
 
-        Assert.False(recognizer.IsLoaded);
+        recognizer.IsLoaded.ShouldBeFalse();
 
         _ = engine.Analyze("My name is Sharon and I live in Seattle.", "en").ToList();
 
-        Assert.True(recognizer.IsLoaded);
+        recognizer.IsLoaded.ShouldBeTrue();
     }
 
     [Fact]
@@ -259,17 +269,17 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(sample, "en", returnDecisionProcess: true).ToList();
 
-        Assert.NotEmpty(results);
+        results.ShouldNotBeEmpty();
         var person = results.First(result => result.EntityType == "PERSON");
 
-        Assert.True(person.TryGetMetadata<string>(RecognitionMetadataKeys.RecognizerIdentifier, out var identifier));
-        Assert.False(string.IsNullOrWhiteSpace(identifier));
+        person.TryGetMetadata<string>(RecognitionMetadataKeys.RecognizerIdentifier, out var identifier).ShouldBeTrue();
+        identifier.ShouldNotBeNullOrWhiteSpace();
 
-        Assert.True(person.TryGetMetadata<string>(RecognitionMetadataKeys.RecognizerName, out var recognizerName));
-        Assert.Equal("OnnxNerRecognizer", recognizerName);
+        person.TryGetMetadata<string>(RecognitionMetadataKeys.RecognizerName, out var recognizerName).ShouldBeTrue();
+        recognizerName.ShouldBe("OnnxNerRecognizer");
 
-        Assert.True(person.Metadata.ContainsKey("raw_label"));
-        Assert.True(person.Metadata.ContainsKey("source"));
+        person.Metadata.ContainsKey("raw_label").ShouldBeTrue();
+        person.Metadata.ContainsKey("source").ShouldBeTrue();
     }
 
     [Fact]
@@ -278,8 +288,8 @@ public sealed class OnnxAnalyzerIntegrationTests
         using var engine = new AnalyzerEngine();
         var supported = engine.GetSupportedEntities("en");
 
-        Assert.Contains("PERSON", supported);
-        Assert.Contains("LOCATION", supported);
+        supported.ShouldContain("PERSON");
+        supported.ShouldContain("LOCATION");
     }
 
     private static string Slice(string text, RecognizerResult result)

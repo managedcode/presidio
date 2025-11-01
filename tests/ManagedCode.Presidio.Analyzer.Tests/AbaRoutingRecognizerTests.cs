@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -13,10 +13,10 @@ public sealed class AbaRoutingRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "ABA_ROUTING_NUMBER" }).ToList();
 
-        var match = Assert.Single(results);
-        Assert.Equal("ABA_ROUTING_NUMBER", match.EntityType);
-        Assert.Equal(EntityRecognizer.MaxScore, match.Score);
-        Assert.Equal(expected, Slice(text, match));
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("ABA_ROUTING_NUMBER");
+        match.Score.ShouldBe(EntityRecognizer.MaxScore);
+        Slice(text, match).ShouldBe(expected);
     }
 
     [Theory]
@@ -27,7 +27,7 @@ public sealed class AbaRoutingRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "ABA_ROUTING_NUMBER" }).ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     private static string Slice(string text, RecognizerResult result) =>

@@ -1,3 +1,7 @@
+using System.Collections.Concurrent;
+using System.Reflection;
+using System.Text.RegularExpressions;
+
 namespace ManagedCode.Presidio.Analyzer;
 
 /// <summary>
@@ -7,6 +11,8 @@ public sealed class RecognizerRegistry
 {
     private readonly List<EntityRecognizer> _recognizers;
     private readonly HashSet<string> _supportedLanguages;
+    private static readonly ConcurrentDictionary<string, Type?> RecognizerTypeCache = new(StringComparer.Ordinal);
+    private RegexOptions _globalRegexOptions = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline;
 
     public RecognizerRegistry(
         IEnumerable<EntityRecognizer>? recognizers = null,
@@ -25,6 +31,7 @@ public sealed class RecognizerRegistry
     public void AddRecognizer(EntityRecognizer recognizer)
     {
         ArgumentNullException.ThrowIfNull(recognizer);
+        ApplyGlobalRegexOptions(recognizer);
         _recognizers.Add(recognizer);
         _supportedLanguages.Add(recognizer.SupportedLanguage);
     }
@@ -87,87 +94,65 @@ public sealed class RecognizerRegistry
             .ToArray();
     }
 
-    public void LoadPredefinedRecognizers(INlpEngine nlpEngine, IReadOnlyCollection<string> languages)
+    public void LoadPredefinedRecognizers(
+        RecognizerRegistryConfiguration configuration,
+        INlpEngine? nlpEngine = null,
+        IReadOnlyCollection<string>? languages = null)
     {
-        // Placeholder for the YAML-backed loader present in the Python implementation.
-        // Predefined recognizers will be populated as part of the ongoing migration.
-        ArgumentNullException.ThrowIfNull(languages);
+        ArgumentNullException.ThrowIfNull(configuration);
 
-        _supportedLanguages.UnionWith(languages);
+        _globalRegexOptions = configuration.GlobalRegexOptions;
+        if (configuration.SupportedLanguages.Count > 0)
+        {
+            _supportedLanguages.UnionWith(configuration.SupportedLanguages);
+        }
+
+        foreach (var definition in configuration.Recognizers)
+        {
+            if (!definition.Enabled)
+            {
+                continue;
+            }
+
+            if (!string.Equals(definition.Type, "predefined", StringComparison.OrdinalIgnoreCase))
+            {
+                // TODO: support custom recognizer definitions (type: custom)
+                continue;
+            }
+
+            var recognizerType = ResolveRecognizerType(definition.Name);
+            if (recognizerType is null)
+            {
+                // TODO: add logging once tracing infrastructure is in place.
+                continue;
+            }
+
+            foreach (var languageConfiguration in definition.Languages)
+            {
+                if (languages is { Count: > 0 } &&
+                    !languages.Contains(languageConfiguration.Language, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (HasRecognizer(recognizerType, languageConfiguration.Language))
+                {
+                    continue;
+                }
+
+                var recognizer = InstantiatePredefinedRecognizer(recognizerType, languageConfiguration);
+                if (recognizer is null)
+                {
+                    continue;
+                }
+
+                AddRecognizer(recognizer);
+            }
+        }
 
         if (nlpEngine is not null)
         {
             AddNlpRecognizer(nlpEngine);
-        }
-
-        foreach (var language in languages)
-        {
-            if (string.Equals(language, "en", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!_recognizers.Any(r => r is CreditCardRecognizer existing && string.Equals(existing.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new CreditCardRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is IbanRecognizer existingIban && string.Equals(existingIban.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new IbanRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is AbaRoutingRecognizer existingAba && string.Equals(existingAba.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new AbaRoutingRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is CryptoRecognizer existingCrypto && string.Equals(existingCrypto.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new CryptoRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is EmailRecognizer existingEmail && string.Equals(existingEmail.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new EmailRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is DateRecognizer existingDate && string.Equals(existingDate.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new DateRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is IpRecognizer existingIp && string.Equals(existingIp.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new IpRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is UrlRecognizer existingUrl && string.Equals(existingUrl.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new UrlRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is PhoneRecognizer existingPhone && string.Equals(existingPhone.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new PhoneRecognizer());
-                }
-
-                if (!_recognizers.Any(r => r is UsSsnRecognizer existingUsSsn && string.Equals(existingUsSsn.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new UsSsnRecognizer());
-                }
-            }
-            else if (string.Equals(language, "fi", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!_recognizers.Any(r => r is FiPersonalIdentityCodeRecognizer existingFi && string.Equals(existingFi.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new FiPersonalIdentityCodeRecognizer());
-                }
-            }
-            else if (string.Equals(language, "pl", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!_recognizers.Any(r => r is PlPeselRecognizer existingPl && string.Equals(existingPl.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
-                {
-                    AddRecognizer(new PlPeselRecognizer());
-                }
-            }
         }
     }
 
@@ -185,6 +170,137 @@ public sealed class RecognizerRegistry
 
             var recognizer = new OnnxNerRecognizer(language, supportedEntities);
             _recognizers.Add(recognizer);
+        }
+    }
+
+    private static Type? ResolveRecognizerType(string recognizerName)
+    {
+        if (RecognizerTypeCache.TryGetValue(recognizerName, out var cached))
+        {
+            return cached;
+        }
+
+        var assembly = typeof(RecognizerRegistry).Assembly;
+        var type = assembly
+            .GetTypes()
+            .FirstOrDefault(candidate =>
+                typeof(EntityRecognizer).IsAssignableFrom(candidate) &&
+                string.Equals(candidate.Name, recognizerName, StringComparison.Ordinal));
+
+        RecognizerTypeCache[recognizerName] = type;
+        return type;
+    }
+
+    private bool HasRecognizer(Type recognizerType, string language) =>
+        _recognizers.Any(existing =>
+            existing.GetType() == recognizerType &&
+            string.Equals(existing.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase));
+
+    private EntityRecognizer? InstantiatePredefinedRecognizer(
+        Type recognizerType,
+        RecognizerLanguageConfiguration languageConfiguration)
+    {
+        var constructors = recognizerType
+            .GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            .OrderByDescending(ctor => ctor.GetParameters().Length);
+
+        foreach (var constructor in constructors)
+        {
+            try
+            {
+                var arguments = BuildConstructorArguments(constructor.GetParameters(), languageConfiguration);
+                if (constructor.Invoke(arguments) is EntityRecognizer recognizer)
+                {
+                    ApplyGlobalRegexOptions(recognizer);
+                    return recognizer;
+                }
+            }
+            catch (TargetInvocationException)
+            {
+                // Skip constructors that throw due to unsupported arguments and try the next overload.
+            }
+            catch (ArgumentException)
+            {
+                // Skip constructors that cannot be invoked with the generated arguments.
+            }
+        }
+
+        return null;
+    }
+
+    private object?[] BuildConstructorArguments(
+        IReadOnlyList<ParameterInfo> parameters,
+        RecognizerLanguageConfiguration languageConfiguration)
+    {
+        var arguments = new object?[parameters.Count];
+        var context = languageConfiguration.Context.Count > 0
+            ? languageConfiguration.Context.ToArray()
+            : Array.Empty<string>();
+
+        for (var index = 0; index < parameters.Count; index++)
+        {
+            var parameter = parameters[index];
+            var parameterType = parameter.ParameterType;
+
+            if (IsPatternEnumerable(parameterType))
+            {
+                arguments[index] = null;
+            }
+            else if (typeof(IEnumerable<string>).IsAssignableFrom(parameterType))
+            {
+                arguments[index] = context.Length > 0 ? context : null;
+            }
+            else if (parameterType == typeof(string))
+            {
+                if (string.Equals(parameter.Name, "supportedLanguage", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(parameter.Name, "supported_language", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(parameter.Name, "language", StringComparison.OrdinalIgnoreCase))
+                {
+                    arguments[index] = languageConfiguration.Language;
+                }
+                else if (parameter.HasDefaultValue)
+                {
+                    arguments[index] = parameter.DefaultValue;
+                }
+                else
+                {
+                    arguments[index] = string.Empty;
+                }
+            }
+            else if (parameterType == typeof(RegexOptions) || parameterType == typeof(RegexOptions?))
+            {
+                arguments[index] = _globalRegexOptions;
+            }
+            else if (parameter.HasDefaultValue)
+            {
+                arguments[index] = parameter.DefaultValue;
+            }
+            else if (parameterType.IsValueType)
+            {
+                arguments[index] = Activator.CreateInstance(parameterType);
+            }
+            else
+            {
+                arguments[index] = null;
+            }
+        }
+
+        return arguments;
+    }
+
+    private static bool IsPatternEnumerable(Type parameterType)
+    {
+        return parameterType.IsGenericType &&
+               parameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>) &&
+               parameterType.GenericTypeArguments.Length == 1 &&
+               parameterType.GenericTypeArguments[0] == typeof(Pattern);
+    }
+
+    private void ApplyGlobalRegexOptions(EntityRecognizer recognizer)
+    {
+        if (recognizer is PatternRecognizer patternRecognizer)
+        {
+            patternRecognizer.SetGlobalRegexOptions(_globalRegexOptions);
         }
     }
 }

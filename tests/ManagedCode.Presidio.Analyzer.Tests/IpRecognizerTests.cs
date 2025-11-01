@@ -1,3 +1,4 @@
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -15,14 +16,10 @@ public sealed class IpRecognizerTests
         var recognizer = new IpRecognizer();
         var results = recognizer.Analyze(text, new[] { "IP_ADDRESS" }, new NlpArtifacts("en")).ToList();
 
-        var match = Assert.Single(results);
-        Assert.Equal("IP_ADDRESS", match.EntityType);
-        Assert.Equal(expectedScore, match.Score, 3);
-
-        var segment = text[match.Start..match.End];
-        Assert.True(
-            string.Equals(segment, expectedMatch, StringComparison.Ordinal),
-            $"Segment '{segment}' with score {match.Score}");
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("IP_ADDRESS");
+        match.Score.ShouldBe(expectedScore, 0.000_01);
+        text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 
     [Theory]
@@ -34,6 +31,6 @@ public sealed class IpRecognizerTests
         var recognizer = new IpRecognizer();
         var results = recognizer.Analyze(text, new[] { "IP_ADDRESS" }, new NlpArtifacts("en"));
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 }

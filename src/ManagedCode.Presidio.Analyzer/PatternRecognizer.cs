@@ -6,10 +6,10 @@ namespace ManagedCode.Presidio.Analyzer;
 /// <summary>
 /// Regular-expression driven recognizer aligned with the Python pattern recognizer.
 /// </summary>
-public class PatternRecognizer : EntityRecognizer
+public class PatternRecognizer : LocalRecognizer
 {
     private readonly IReadOnlyList<Pattern> _patterns;
-    private readonly RegexOptions _globalRegexOptions;
+    private RegexOptions _globalRegexOptions;
     private readonly IReadOnlyList<string> _context;
     private readonly List<CompiledPattern> _compiledPatterns;
 
@@ -113,6 +113,11 @@ public class PatternRecognizer : EntityRecognizer
     protected virtual bool? ValidateResult(string patternText) => null;
 
     protected virtual bool? InvalidateResult(string patternText) => null;
+
+    internal void SetGlobalRegexOptions(RegexOptions options)
+    {
+        _globalRegexOptions = options;
+    }
 
     protected static AnalysisExplanation BuildRegexExplanation(
         string recognizerName,

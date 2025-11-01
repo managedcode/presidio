@@ -10,5 +10,7 @@
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="1.0.3" />
     <PackageVersion Include="libphonenumber-csharp" Version="8.13.36" />
+    <PackageVersion Include="YamlDotNet" Version="15.1.2" />
+    <PackageVersion Include="Shouldly" Version="4.2.1" />
   </ItemGroup>
 </Project>

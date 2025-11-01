@@ -1,3 +1,4 @@
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -17,10 +18,10 @@ public sealed class UrlRecognizerTests
         var recognizer = new UrlRecognizer();
         var results = recognizer.Analyze(text, new[] { "URL" }, new NlpArtifacts("en")).ToList();
 
-        var match = Assert.Single(results);
-        Assert.Equal("URL", match.EntityType);
-        Assert.Equal(expectedScore, match.Score, 3);
-        Assert.Equal(expectedMatch, text[match.Start..match.End]);
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("URL");
+        match.Score.ShouldBe(expectedScore, 0.000_01);
+        text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 
     [Fact]
@@ -30,9 +31,9 @@ public sealed class UrlRecognizerTests
         var recognizer = new UrlRecognizer();
         var results = recognizer.Analyze(text, new[] { "URL" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
-        Assert.Equal(2, results.Count);
-        Assert.Equal("microsoft.com", text[results[0].Start..results[0].End]);
-        Assert.Equal("google.co.il", text[results[1].Start..results[1].End]);
+        results.Count.ShouldBe(2);
+        text[results[0].Start..results[0].End].ShouldBe("microsoft.com");
+        text[results[1].Start..results[1].End].ShouldBe("google.co.il");
     }
 
     [Theory]
@@ -44,6 +45,6 @@ public sealed class UrlRecognizerTests
         var recognizer = new UrlRecognizer();
         var results = recognizer.Analyze(text, new[] { "URL" }, new NlpArtifacts("en"));
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 }

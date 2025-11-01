@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -28,13 +28,13 @@ public sealed class DateRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "DATE_TIME" }).ToList();
 
-        static bool Matches(RecognizerResult r, string text, string expected) =>
+        bool Matches(RecognizerResult r) =>
             r.EntityType == "DATE_TIME" &&
             Slice(text, r).Equals(expected, StringComparison.Ordinal);
 
-        Assert.Contains(results, r => Matches(r, text, expected));
-        var match = results.First(r => Matches(r, text, expected));
-        Assert.Equal(expectedScore, match.Score, 5);
+        results.ShouldContain(Matches);
+        var match = results.First(Matches);
+        match.Score.ShouldBe(expectedScore, 0.000_01);
     }
 
     [Theory]
@@ -47,7 +47,7 @@ public sealed class DateRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "DATE_TIME" }).ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -55,9 +55,9 @@ public sealed class DateRecognizerTests
     {
         var recognizer = new DateRecognizer();
         var results = recognizer.Analyze("2024-03-15T14:30Z", new[] { "DATE_TIME" }, new NlpArtifacts("en"));
-        var match = Assert.Single(results);
-        Assert.Equal("DATE_TIME", match.EntityType);
-        Assert.Equal(0.8, match.Score, 5);
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("DATE_TIME");
+        match.Score.ShouldBe(0.8, 0.000_01);
     }
 
     private static string Slice(string text, RecognizerResult result) => text[result.Start..result.End];

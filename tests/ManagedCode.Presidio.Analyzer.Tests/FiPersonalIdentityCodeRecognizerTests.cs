@@ -1,3 +1,4 @@
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -32,10 +33,10 @@ public sealed class FiPersonalIdentityCodeRecognizerTests
         foreach (var code in ValidCodes)
         {
             var results = recognizer.Analyze(code, new[] { "FI_PERSONAL_IDENTITY_CODE" }, new NlpArtifacts("fi")).ToList();
-            var match = Assert.Single(results);
-            Assert.Equal("FI_PERSONAL_IDENTITY_CODE", match.EntityType);
-            Assert.Equal(EntityRecognizer.MaxScore, match.Score);
-            Assert.Equal(code, code[match.Start..match.End]);
+            var match = results.ShouldHaveSingleItem();
+            match.EntityType.ShouldBe("FI_PERSONAL_IDENTITY_CODE");
+            match.Score.ShouldBe(EntityRecognizer.MaxScore);
+            code[match.Start..match.End].ShouldBe(code);
         }
     }
 
@@ -47,8 +48,9 @@ public sealed class FiPersonalIdentityCodeRecognizerTests
 
         var results = recognizer.Analyze(text, new[] { "FI_PERSONAL_IDENTITY_CODE" }, new NlpArtifacts("fi")).ToList();
 
-        var match = Assert.Single(results);
-        Assert.Equal("010594Y9032", text[match.Start..match.End]);
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("FI_PERSONAL_IDENTITY_CODE");
+        text[match.Start..match.End].ShouldBe("010594Y9032");
     }
 
     [Fact]
@@ -58,7 +60,7 @@ public sealed class FiPersonalIdentityCodeRecognizerTests
         foreach (var code in InvalidCodes)
         {
             var results = recognizer.Analyze(code, new[] { "FI_PERSONAL_IDENTITY_CODE" }, new NlpArtifacts("fi"));
-            Assert.Empty(results);
+            results.ShouldBeEmpty();
         }
     }
 }

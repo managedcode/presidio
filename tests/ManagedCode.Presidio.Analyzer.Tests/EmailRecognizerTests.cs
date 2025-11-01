@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -17,16 +17,9 @@ public sealed class EmailRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "EMAIL_ADDRESS" }).ToList();
 
-        Assert.Contains(results, r =>
-        {
-            if (!string.Equals(r.EntityType, "EMAIL_ADDRESS", StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            var segment = Slice(text, r);
-            return string.Equals(segment, expected, StringComparison.Ordinal);
-        });
+        results.ShouldContain(r =>
+            r.EntityType == "EMAIL_ADDRESS" &&
+            Slice(text, r).Equals(expected, StringComparison.Ordinal));
     }
 
     [Theory]
@@ -40,7 +33,7 @@ public sealed class EmailRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "EMAIL_ADDRESS" }).ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -49,9 +42,9 @@ public sealed class EmailRecognizerTests
         var recognizer = new EmailRecognizer();
         var results = recognizer.Analyze("info@presidio.site", new[] { "EMAIL_ADDRESS" }, new NlpArtifacts("en"));
 
-        var match = Assert.Single(results);
-        Assert.Equal(EntityRecognizer.MaxScore, match.Score);
-        Assert.Equal("EMAIL_ADDRESS", match.EntityType);
+        var match = results.ShouldHaveSingleItem();
+        match.EntityType.ShouldBe("EMAIL_ADDRESS");
+        match.Score.ShouldBe(EntityRecognizer.MaxScore);
     }
 
     private static string Slice(string text, RecognizerResult result) => text[result.Start..result.End];

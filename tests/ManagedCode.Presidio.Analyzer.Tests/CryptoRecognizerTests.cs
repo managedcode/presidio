@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -16,23 +16,24 @@ public sealed class CryptoRecognizerTests
     {
         ArgumentNullException.ThrowIfNull(expected);
 
-        var directRecognizer = new CryptoRecognizer();
-        var directResults = directRecognizer.Analyze(text, new[] { "CRYPTO" }, new NlpArtifacts("en")).ToList();
-
         bool Matches(RecognizerResult result) =>
             result.EntityType == "CRYPTO" &&
             Slice(text, result).Equals(expected, StringComparison.Ordinal);
 
-        Assert.Contains(directResults, Matches);
+        var recognizer = new CryptoRecognizer();
+        var directResults = recognizer.Analyze(text, new[] { "CRYPTO" }, new NlpArtifacts("en")).ToList();
+
+        directResults.ShouldContain(Matches);
         var directMatch = directResults.First(Matches);
-        Assert.Equal(EntityRecognizer.MaxScore, directMatch.Score);
+        directMatch.Score.ShouldBe(EntityRecognizer.MaxScore);
 
         using var engine = new AnalyzerEngine();
-        var results = engine.Analyze(text, "en", new[] { "CRYPTO" }).ToList();
-        Assert.True(engine.GetRecognizers("en").OfType<CryptoRecognizer>().Any(), "CryptoRecognizer is not registered for 'en'.");
-        Assert.Contains(results, Matches);
-        var engineMatch = results.First(Matches);
-        Assert.Equal(EntityRecognizer.MaxScore, engineMatch.Score);
+        engine.GetRecognizers("en").OfType<CryptoRecognizer>().ShouldNotBeEmpty();
+        var engineResults = engine.Analyze(text, "en", new[] { "CRYPTO" }).ToList();
+
+        engineResults.ShouldContain(Matches);
+        var engineMatch = engineResults.First(Matches);
+        engineMatch.Score.ShouldBe(EntityRecognizer.MaxScore);
     }
 
     [Theory]
@@ -47,7 +48,7 @@ public sealed class CryptoRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "CRYPTO" }).ToList();
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -57,15 +58,15 @@ public sealed class CryptoRecognizerTests
 
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "CRYPTO" }).ToList();
-        Assert.Equal(2, results.Count);
-        Assert.Contains(results, r => Slice(text, r).Equals("16Yeky6GMjeNkAiNcBY7ZhrLoMSgg1BoyZ", StringComparison.Ordinal));
-        Assert.Contains(results, r => Slice(text, r).Equals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy", StringComparison.Ordinal));
+        results.Count.ShouldBe(2);
+        results.ShouldContain(r => Slice(text, r).Equals("16Yeky6GMjeNkAiNcBY7ZhrLoMSgg1BoyZ", StringComparison.Ordinal));
+        results.ShouldContain(r => Slice(text, r).Equals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy", StringComparison.Ordinal));
 
         var recognizer = new CryptoRecognizer();
         var directResults = recognizer.Analyze(text, new[] { "CRYPTO" }, new NlpArtifacts("en")).ToList();
-        Assert.Equal(2, directResults.Count);
-        Assert.Contains(directResults, r => Slice(text, r).Equals("16Yeky6GMjeNkAiNcBY7ZhrLoMSgg1BoyZ", StringComparison.Ordinal));
-        Assert.Contains(directResults, r => Slice(text, r).Equals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy", StringComparison.Ordinal));
+        directResults.Count.ShouldBe(2);
+        directResults.ShouldContain(r => Slice(text, r).Equals("16Yeky6GMjeNkAiNcBY7ZhrLoMSgg1BoyZ", StringComparison.Ordinal));
+        directResults.ShouldContain(r => Slice(text, r).Equals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy", StringComparison.Ordinal));
     }
 
     private static string Slice(string text, RecognizerResult result) => text[result.Start..result.End];

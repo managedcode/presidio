@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -13,8 +13,8 @@ public sealed class EntityRecognizerBehaviorTests
 
         var results = EntityRecognizer.RemoveDuplicates(new[] { lowScore, highScore });
 
-        var single = Assert.Single(results);
-        Assert.Equal(0.9, single.Score);
+        var single = results.ShouldHaveSingleItem();
+        single.Score.ShouldBe(0.9);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public sealed class EntityRecognizerBehaviorTests
 
         var results = EntityRecognizer.RemoveDuplicates(new[] { first, second });
 
-        Assert.Equal(2, results.Count);
+        results.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -36,8 +36,8 @@ public sealed class EntityRecognizerBehaviorTests
 
         var results = EntityRecognizer.RemoveDuplicates(new[] { outer, inner });
 
-        var single = Assert.Single(results);
-        Assert.Same(outer, single);
+        var single = results.ShouldHaveSingleItem();
+        single.ShouldBeSameAs(outer);
     }
 
     [Theory]
@@ -45,7 +45,7 @@ public sealed class EntityRecognizerBehaviorTests
     public void SanitizeValueRemovesTokens(string input, IEnumerable<(string Search, string Replacement)> replacements, string expected)
     {
         var output = EntityRecognizer.SanitizeValue(input, replacements);
-        Assert.Equal(expected, output);
+        output.ShouldBe(expected);
     }
 
     [Fact]
@@ -55,10 +55,10 @@ public sealed class EntityRecognizerBehaviorTests
 
         var dictionary = recognizer.ToDictionary();
 
-        Assert.Equal(new[] { "ENTITY" }, dictionary[nameof(EntityRecognizer.SupportedEntities)]);
-        Assert.Equal("en", dictionary[nameof(EntityRecognizer.SupportedLanguage)]);
-        Assert.Equal("TestRecognizer", dictionary[nameof(EntityRecognizer.Name)]);
-        Assert.Equal("0.0.1", dictionary[nameof(EntityRecognizer.Version)]);
+        dictionary[nameof(EntityRecognizer.SupportedEntities)].ShouldBe(new[] { "ENTITY" });
+        dictionary[nameof(EntityRecognizer.SupportedLanguage)].ShouldBe("en");
+        dictionary[nameof(EntityRecognizer.Name)].ShouldBe("TestRecognizer");
+        dictionary[nameof(EntityRecognizer.Version)].ShouldBe("0.0.1");
     }
 
     private sealed class TestRecognizer : EntityRecognizer

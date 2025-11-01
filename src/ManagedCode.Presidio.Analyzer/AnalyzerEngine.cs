@@ -38,10 +38,8 @@ public sealed class AnalyzerEngine : IDisposable
 
         if (registry is null)
         {
-            var provider = new RecognizerRegistryProvider(
-                new RecognizerRegistryConfiguration(_supportedLanguages));
-            _registry = provider.CreateRecognizerRegistry();
-            _registry.AddNlpRecognizer(_nlpEngine);
+            var provider = new RecognizerRegistryProvider();
+            _registry = provider.CreateRecognizerRegistry(_nlpEngine, _supportedLanguages);
         }
         else
         {
@@ -53,8 +51,6 @@ public sealed class AnalyzerEngine : IDisposable
 
             _registry = registry;
         }
-
-        _registry.LoadPredefinedRecognizers(_nlpEngine, _supportedLanguages);
 
         _contextAwareEnhancer = contextAwareEnhancer ?? new LemmaContextAwareEnhancer();
     }

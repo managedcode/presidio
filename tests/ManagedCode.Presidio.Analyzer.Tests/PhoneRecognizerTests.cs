@@ -1,4 +1,4 @@
-using ManagedCode.Presidio.Core;
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -12,15 +12,15 @@ public sealed class PhoneRecognizerTests
         var recognizer = new PhoneRecognizer();
         var results = recognizer.Analyze(text, new[] { "PHONE_NUMBER" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
-        Assert.Equal(2, results.Count);
+        results.Count.ShouldBe(2);
 
-        Assert.Equal("PHONE_NUMBER", results[0].EntityType);
-        Assert.Equal("(415) 555-0132", Slice(text, results[0]));
-        Assert.Equal(0.4, results[0].Score, 3);
+        results[0].EntityType.ShouldBe("PHONE_NUMBER");
+        Slice(text, results[0]).ShouldBe("(415) 555-0132");
+        results[0].Score.ShouldBe(PhoneRecognizer.DefaultScore, 0.000_01);
 
-        Assert.Equal("PHONE_NUMBER", results[1].EntityType);
-        Assert.Equal("+1 415 555 0132", Slice(text, results[1]));
-        Assert.Equal(0.4, results[1].Score, 3);
+        results[1].EntityType.ShouldBe("PHONE_NUMBER");
+        Slice(text, results[1]).ShouldBe("+1 415 555 0132");
+        results[1].Score.ShouldBe(PhoneRecognizer.DefaultScore, 0.000_01);
     }
 
     [Theory]
@@ -36,7 +36,7 @@ public sealed class PhoneRecognizerTests
         var recognizer = new PhoneRecognizer(leniency: leniency);
         var results = recognizer.Analyze(text, new[] { "PHONE_NUMBER" }, new NlpArtifacts("en"));
 
-        Assert.Equal(expectedCount, results.Count);
+        results.Count.ShouldBe(expectedCount);
     }
 
     [Theory]
@@ -51,13 +51,13 @@ public sealed class PhoneRecognizerTests
         var recognizer = new PhoneRecognizer();
         var results = recognizer.Analyze(text, new[] { "PHONE_NUMBER" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
-        Assert.Equal(expectedExplanations.Length, results.Count);
+        results.Count.ShouldBe(expectedExplanations.Length);
         for (var i = 0; i < expectedExplanations.Length; i++)
         {
             var explanation = results[i].AnalysisExplanation;
-            Assert.NotNull(explanation);
-            Assert.Equal(expectedExplanations[i], explanation!.TextualExplanation);
-            Assert.Equal(PhoneRecognizer.DefaultScore, explanation.Score, 3);
+            explanation.ShouldNotBeNull();
+            explanation!.TextualExplanation.ShouldBe(expectedExplanations[i]);
+            explanation.Score.ShouldBe(PhoneRecognizer.DefaultScore, 0.000_01);
         }
     }
 

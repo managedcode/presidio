@@ -1,3 +1,4 @@
+using Shouldly;
 using Xunit;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
@@ -18,14 +19,14 @@ public sealed class UsSsnRecognizerTests
             .OrderBy(r => r.Start)
             .ToList();
 
-        Assert.Equal(expectedMatches.Length, results.Count);
+        results.Count.ShouldBe(expectedMatches.Length);
 
         for (var i = 0; i < expectedMatches.Length; i++)
         {
             var match = results[i];
-            Assert.Equal("US_SSN", match.EntityType);
-            Assert.True(match.Score >= minimumScore);
-            Assert.Equal(expectedMatches[i], text[match.Start..match.End]);
+            match.EntityType.ShouldBe("US_SSN");
+            match.Score.ShouldBeGreaterThanOrEqualTo(minimumScore);
+            text[match.Start..match.End].ShouldBe(expectedMatches[i]);
         }
     }
 
@@ -42,6 +43,6 @@ public sealed class UsSsnRecognizerTests
         var recognizer = new UsSsnRecognizer();
         var results = recognizer.Analyze(text, new[] { "US_SSN" }, new NlpArtifacts("en"));
 
-        Assert.Empty(results);
+        results.ShouldBeEmpty();
     }
 }

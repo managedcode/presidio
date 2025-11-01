@@ -1,0 +1,7 @@
+nlp_engine_name: onnx
+models:
+  - lang_code: en
+    model_path: models/ner/bert-base/model.onnx
+    vocabulary_path: models/ner/bert-base/vocab.txt
+    configuration_path: models/ner/bert-base/config.json
+    max_sequence_length: 256
