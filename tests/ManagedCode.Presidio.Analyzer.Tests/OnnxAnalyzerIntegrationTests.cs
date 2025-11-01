@@ -297,7 +297,8 @@ public sealed class OnnxAnalyzerIntegrationTests
         var directory = AppContext.BaseDirectory;
         while (!string.IsNullOrEmpty(directory))
         {
-            if (File.Exists(Path.Combine(directory, "Presidio.sln")))
+            if (File.Exists(Path.Combine(directory, "Presidio.sln")) ||
+                File.Exists(Path.Combine(directory, "Presidio.slnx")))
             {
                 return directory;
             }
