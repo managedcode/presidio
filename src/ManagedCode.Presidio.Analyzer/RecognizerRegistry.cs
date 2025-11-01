@@ -148,6 +148,25 @@ public sealed class RecognizerRegistry
                 {
                     AddRecognizer(new PhoneRecognizer());
                 }
+
+                if (!_recognizers.Any(r => r is UsSsnRecognizer existingUsSsn && string.Equals(existingUsSsn.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new UsSsnRecognizer());
+                }
+            }
+            else if (string.Equals(language, "fi", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!_recognizers.Any(r => r is FiPersonalIdentityCodeRecognizer existingFi && string.Equals(existingFi.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new FiPersonalIdentityCodeRecognizer());
+                }
+            }
+            else if (string.Equals(language, "pl", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!_recognizers.Any(r => r is PlPeselRecognizer existingPl && string.Equals(existingPl.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddRecognizer(new PlPeselRecognizer());
+                }
             }
         }
     }

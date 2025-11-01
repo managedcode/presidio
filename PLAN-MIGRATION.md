@@ -38,16 +38,16 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | Country | Python Class | Status |
 | --- | --- | --- |
 | Australia | `AuAbnRecognizer`, `AuAcnRecognizer`, `AuMedicareRecognizer`, `AuTfnRecognizer` | 🚧 |
-| Finland | `FiPersonalIdentityCodeRecognizer` | 🚧 |
+| Finland | `FiPersonalIdentityCodeRecognizer` | ✅ |
 | India | `InAadhaarRecognizer`, `InGstinRecognizer`, `InPanRecognizer`, `InPassportRecognizer`, `InVehicleRegistrationRecognizer`, `InVoterRecognizer` | 🚧 |
 | Italy | `ItDriverLicenseRecognizer`, `ItFiscalCodeRecognizer`, `ItIdentityCardRecognizer`, `ItPassportRecognizer`, `ItVatCodeRecognizer` | 🚧 |
 | Korea | `KrRrnRecognizer` | 🚧 |
-| Poland | `PlPeselRecognizer` | 🚧 |
+| Poland | `PlPeselRecognizer` | ✅ |
 | Singapore | `SgFinRecognizer`, `SgUenRecognizer` | 🚧 |
 | Spain | `EsNieRecognizer`, `EsNifRecognizer` | 🚧 |
 | Thailand | `ThTninRecognizer` | 🚧 |
 | UK | `NhsRecognizer`, `UkNinoRecognizer` | 🚧 |
-| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer`, `UsSsnRecognizer` | 🚧 |
+| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer` (🚧), `UsSsnRecognizer` (✅) | 🚧 |
 
 ## NLP Engine Recognizers
 

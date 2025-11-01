@@ -38,6 +38,8 @@ Update guidelines:
 - for Presidio analyzer tests, NEVER add stubbed recognizer tests; port the Python scenarios to exercise the real analyzer pipeline end-to-end
 - for Presidio analyzer parity work, keep iterating without pausing for confirmation and focus solely on integration tests that validate real functionality
 - for Presidio migration tasks, do not stop to ask the user for clarification mid-task; follow the migration plan and deliver completed work
+- for Presidio test work, ALWAYS include negative/error scenarios alongside positive cases to validate failure paths
+- for Presidio recognizer coverage, ensure EU social security numbers are handled alongside US SSN patterns
 - use enums and constants over magic strings and numbers
 - for .NET work, always run `dotnet format` before `dotnet test` and confirm the suite passes
 - avoid template placeholders (e.g., `Class1.cs`, `UnitTest1.cs`); name files and types according to their real domain purpose
