@@ -82,7 +82,7 @@ public sealed class DeanonymizeEngineTests
         var anonymizerEngine = new AnonymizerEngine();
         var anonymized = anonymizerEngine.Anonymize(
             text,
-            recognizerResults,
+            ToCore(recognizerResults),
             new Dictionary<string, OperatorConfig>
             {
                 ["PERSON"] = new OperatorConfig("encrypt", new Dictionary<string, object?>
@@ -94,7 +94,7 @@ public sealed class DeanonymizeEngineTests
         var deanonymizeEngine = new DeanonymizeEngine();
         var deanonymized = deanonymizeEngine.Deanonymize(
             anonymized.Text!,
-            anonymized.Items,
+            anonymized.Items.ToList(),
             new Dictionary<string, OperatorConfig>
             {
                 ["PERSON"] = new OperatorConfig("decrypt", new Dictionary<string, object?>
@@ -139,7 +139,7 @@ public sealed class DeanonymizeEngineTests
         anonymizer.AddAnonymizer(typeof(ReverserAnonymizeOperator));
         var anonymized = anonymizer.Anonymize(
             text,
-            recognizerResults,
+            ToCore(recognizerResults),
             new Dictionary<string, OperatorConfig>
             {
                 ["WORD"] = new OperatorConfig("Reverser")
@@ -151,13 +151,18 @@ public sealed class DeanonymizeEngineTests
         deanonymizer.AddDeanonymizer(typeof(ReverserDeanonymizeOperator));
         var restored = deanonymizer.Deanonymize(
             anonymized.Text!,
-            anonymized.Items,
+            anonymized.Items.ToList(),
             new Dictionary<string, OperatorConfig>
             {
                 ["WORD"] = new OperatorConfig("Reverser")
             });
 
         Assert.Equal(text, restored.Text);
+    }
+
+    private static IReadOnlyCollection<ManagedCode.Presidio.Core.RecognizerResult> ToCore(IEnumerable<RecognizerResult> results)
+    {
+        return results.Select(result => result.ToCore()).ToList();
     }
 
     private sealed class CustomDeanonymizer : Operator

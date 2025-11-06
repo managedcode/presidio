@@ -10,7 +10,8 @@ public sealed class BatchAnonymizerEngineTests
     public void AnonymizeDictReplacesValues()
     {
         var texts = new[] { "John", "Jill", "Jack" };
-        var recognizerResults = new[] { PersonEntity, PersonEntity, PersonEntity };
+
+        _ = new[] { PersonEntity, PersonEntity, PersonEntity };
 
         var engine = new BatchAnonymizerEngine();
         var input = new[]

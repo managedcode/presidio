@@ -7,8 +7,15 @@ public sealed class KeepOperatorTests
     [Fact]
     public void OperateReturnsOriginalText()
     {
-        var op = new KeepOperator();
-        var output = op.Operate("original", new Dictionary<string, object?>());
+        var output = new KeepOperator().Operate("original", new Dictionary<string, object?>());
+
+        Assert.Equal("original", output);
+    }
+
+    [Fact]
+    public void DeanonymizeVariantAlsoReturnsOriginalText()
+    {
+        var output = new DeanonymizeKeepOperator().Operate("original", new Dictionary<string, object?>());
 
         Assert.Equal("original", output);
     }
@@ -16,9 +23,14 @@ public sealed class KeepOperatorTests
     [Fact]
     public void ValidateDoesNotThrow()
     {
-        var op = new KeepOperator();
+        Assert.Null(Record.Exception(() => new KeepOperator().Validate(new Dictionary<string, object?>())));
+        Assert.Null(Record.Exception(() => new DeanonymizeKeepOperator().Validate(new Dictionary<string, object?>())));
+    }
 
-        var exception = Record.Exception(() => op.Validate(new Dictionary<string, object?>()));
-        Assert.Null(exception);
+    [Fact]
+    public void OperatorNamesMatchPythonBehaviour()
+    {
+        Assert.Equal("keep", new KeepOperator().OperatorName);
+        Assert.Equal("deanonymize_keep", new DeanonymizeKeepOperator().OperatorName);
     }
 }
