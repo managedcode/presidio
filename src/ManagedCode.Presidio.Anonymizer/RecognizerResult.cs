@@ -83,4 +83,12 @@ public sealed class RecognizerResult : PiiEntity, IComparable<RecognizerResult>
         ArgumentNullException.ThrowIfNull(result);
         return new RecognizerResult(result.EntityType, result.Start, result.End, result.Score);
     }
+
+    public ManagedCode.Presidio.Core.RecognizerResult ToCore()
+    {
+        return new ManagedCode.Presidio.Core.RecognizerResult(
+            EntityType,
+            new ManagedCode.Presidio.Core.TextSpan(Start, End),
+            Score);
+    }
 }
