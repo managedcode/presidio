@@ -1,3 +1,4 @@
+using System.Reflection;
 using Shouldly;
 using Xunit;
 
@@ -34,7 +35,10 @@ public sealed class InGstinRecognizerTests
     public void ValidateResultMatchesPython(string gstin, bool expected)
     {
         var recognizer = new InGstinRecognizer();
-        recognizer.ValidateResult(gstin).ShouldBe(expected);
+        var method = typeof(InGstinRecognizer).GetMethod("ValidateResult", BindingFlags.Instance | BindingFlags.NonPublic);
+        method.ShouldNotBeNull();
+        var actual = (bool?)method!.Invoke(recognizer, new object[] { gstin });
+        actual.ShouldBe(expected);
     }
 
     [Theory]
@@ -56,4 +60,5 @@ public sealed class InGstinRecognizerTests
         var recognizer = new InGstinRecognizer();
         recognizer.SanitizeValue(text).ShouldBe(expected);
     }
+
 }

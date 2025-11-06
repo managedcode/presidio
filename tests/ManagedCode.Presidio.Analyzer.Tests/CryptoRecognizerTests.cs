@@ -16,24 +16,26 @@ public sealed class CryptoRecognizerTests
     {
         ArgumentNullException.ThrowIfNull(expected);
 
-        bool Matches(RecognizerResult result) =>
-            result.EntityType == "CRYPTO" &&
-            Slice(text, result).Equals(expected, StringComparison.Ordinal);
-
         var recognizer = new CryptoRecognizer();
         var directResults = recognizer.Analyze(text, new[] { "CRYPTO" }, new NlpArtifacts("en")).ToList();
 
-        directResults.ShouldContain(Matches);
-        var directMatch = directResults.First(Matches);
-        directMatch.Score.ShouldBe(EntityRecognizer.MaxScore);
+        var directMatch = directResults.FirstOrDefault(result =>
+            result.EntityType == "CRYPTO" &&
+            Slice(text, result).Equals(expected, StringComparison.Ordinal));
+
+        directMatch.ShouldNotBeNull();
+        directMatch!.Score.ShouldBe(EntityRecognizer.MaxScore);
 
         using var engine = new AnalyzerEngine();
         engine.GetRecognizers("en").OfType<CryptoRecognizer>().ShouldNotBeEmpty();
         var engineResults = engine.Analyze(text, "en", new[] { "CRYPTO" }).ToList();
 
-        engineResults.ShouldContain(Matches);
-        var engineMatch = engineResults.First(Matches);
-        engineMatch.Score.ShouldBe(EntityRecognizer.MaxScore);
+        var engineMatch = engineResults.FirstOrDefault(result =>
+            result.EntityType == "CRYPTO" &&
+            Slice(text, result).Equals(expected, StringComparison.Ordinal));
+
+        engineMatch.ShouldNotBeNull();
+        engineMatch!.Score.ShouldBe(EntityRecognizer.MaxScore);
     }
 
     [Theory]

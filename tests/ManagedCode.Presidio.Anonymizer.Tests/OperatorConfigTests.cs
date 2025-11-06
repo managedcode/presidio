@@ -1,4 +1,3 @@
-using ManagedCode.Presidio.Core;
 using Xunit;
 
 namespace ManagedCode.Presidio.Anonymizer.Tests;
@@ -37,13 +36,13 @@ public sealed class OperatorConfigTests
     [Fact]
     public void OperatorResultCapturesSpanAndMetadata()
     {
-        var result = new OperatorResult(new TextSpan(0, 4), "PERSON", "****", "mask");
+        var result = new OperatorResult(0, 4, "PERSON", "****", "mask");
 
         Assert.Equal(0, result.Start);
         Assert.Equal(4, result.End);
         Assert.Equal("****", result.Text);
         Assert.Equal("mask", result.Operator);
-        Assert.Equal("PERSON", result.ToDictionary()[nameof(OperatorResult.EntityType)]);
+        Assert.Equal("PERSON", result.ToDictionary()["entity_type"]);
     }
 
     [Fact]
@@ -52,8 +51,8 @@ public sealed class OperatorConfigTests
         var result = new EngineResult();
         result.SetText("redacted");
 
-        result.AddItem(new OperatorResult(new TextSpan(0, 4), "PERSON", "****", "mask"));
-        result.AddItem(new OperatorResult(new TextSpan(10, 20), "EMAIL", "[email]", "replace"));
+        result.AddItem(new OperatorResult(0, 4, "PERSON", "****", "mask"));
+        result.AddItem(new OperatorResult(10, 20, "EMAIL", "[email]", "replace"));
 
         Assert.Equal("redacted", result.Text);
         Assert.Equal(2, result.Items.Count);
@@ -63,14 +62,14 @@ public sealed class OperatorConfigTests
     [Fact]
     public void PiiEntityComparisonOrdersBySpan()
     {
-        var earlier = new TestEntity(new TextSpan(0, 4), "PERSON");
-        var later = new TestEntity(new TextSpan(5, 8), "PERSON");
+        var earlier = new TestEntity(0, 4, "PERSON");
+        var later = new TestEntity(5, 8, "PERSON");
 
         Assert.True(earlier < later);
         Assert.True(later > earlier);
     }
 
-    private sealed class TestEntity(TextSpan span, string entityType) : PiiEntity(span, entityType)
+    private sealed class TestEntity(int start, int end, string entityType) : PiiEntity(start, end, entityType)
     {
     }
 }

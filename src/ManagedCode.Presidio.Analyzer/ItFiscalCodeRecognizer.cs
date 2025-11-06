@@ -121,5 +121,3 @@ public sealed class ItFiscalCodeRecognizer(
         return expected == control ? true : null;
     }
 }
-using System.Collections.Generic;
-using System.Linq;

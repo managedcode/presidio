@@ -17,10 +17,10 @@ public sealed class UkNinoRecognizerTests
         var results = recognizer.Analyze(text, new[] { "UK_NINO" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
         var match = results.ShouldHaveSingleItem();
-        match.EntityType);
-        match.Score, 5.ShouldBe(0.5.ShouldBe("UK_NINO");
-        match.Start);
-        match.End.ShouldBe(expectedEnd.ShouldBe(expectedStart);
+        match.EntityType.ShouldBe("UK_NINO");
+        match.Score.ShouldBe(EntityRecognizer.MaxScore);
+        match.Start.ShouldBe(expectedStart);
+        match.End.ShouldBe(expectedEnd);
         text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 
@@ -38,4 +38,3 @@ public sealed class UkNinoRecognizerTests
         results.ShouldBeEmpty();
     }
 }
-

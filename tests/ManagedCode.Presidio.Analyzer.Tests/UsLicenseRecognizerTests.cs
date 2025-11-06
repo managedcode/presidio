@@ -12,15 +12,15 @@ public sealed class UsLicenseRecognizerTests
         var recognizer = new UsLicenseRecognizer();
         var results = recognizer.Analyze(text, new[] { "US_DRIVER_LICENSE" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
-        results.Count);
+        results.Count.ShouldBe(expectedCount);
         for (var i = 0; i < results.Count; i++)
         {
             var result = results[i];
-            result.EntityType.ShouldBe("US_DRIVER_LICENSE".ShouldBe(expectedCount);
+            result.EntityType.ShouldBe("US_DRIVER_LICENSE");
             result.Score.ShouldBeInRange(expectedScores[i] - 0.01, expectedScores[i] + 0.1);
-            result.Start);
-        result.End.ShouldBe(expectedEnds[i].ShouldBe(expectedStarts[i]);
-    }
+            result.Start.ShouldBe(expectedStarts[i]);
+            result.End.ShouldBe(expectedEnds[i]);
+        }
     }
 
     [Theory]
@@ -43,10 +43,10 @@ public sealed class UsLicenseRecognizerTests
 
         var results = recognizer.Analyze(text, new[] { "US_DRIVER_LICENSE" }, new NlpArtifacts("en")).OrderBy(r => r.Start).ToList();
 
-        results.Count);
+        results.Count.ShouldBe(5);
         foreach (var result in results)
         {
-            result.EntityType.ShouldBe("US_DRIVER_LICENSE".ShouldBe(5);
+            result.EntityType.ShouldBe("US_DRIVER_LICENSE");
             result.Score.ShouldBeInRange(0, 0.02);
         }
     }

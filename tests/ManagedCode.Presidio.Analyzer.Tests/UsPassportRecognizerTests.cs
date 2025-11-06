@@ -19,8 +19,8 @@ public sealed class UsPassportRecognizerTests
             .ToList();
 
         var match = results.ShouldHaveSingleItem();
-        match.EntityType);
-        match.Score, 5.ShouldBe(expectedScore.ShouldBe("US_PASSPORT");
+        match.EntityType.ShouldBe("US_PASSPORT");
+        match.Score.ShouldBe(expectedScore, 5);
         text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 
@@ -37,4 +37,3 @@ public sealed class UsPassportRecognizerTests
         results.ShouldBeEmpty();
     }
 }
-

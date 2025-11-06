@@ -15,10 +15,10 @@ public sealed class NhsRecognizerTests
         var results = recognizer.Analyze(text, new[] { "UK_NHS" }, new NlpArtifacts("en")).ToList();
 
         var match = results.ShouldHaveSingleItem();
-        match.EntityType);
-        match.Score.ShouldBe(EntityRecognizer.MaxScore.ShouldBe("UK_NHS");
-        match.Start);
-        match.End.ShouldBe(expectedEnd.ShouldBe(expectedStart);
+        match.EntityType.ShouldBe("UK_NHS");
+        match.Score.ShouldBe(EntityRecognizer.MaxScore);
+        match.Start.ShouldBe(expectedStart);
+        match.End.ShouldBe(expectedEnd);
         text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 
@@ -31,4 +31,3 @@ public sealed class NhsRecognizerTests
         results.ShouldBeEmpty();
     }
 }
-

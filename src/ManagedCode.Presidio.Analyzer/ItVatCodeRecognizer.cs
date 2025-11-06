@@ -72,4 +72,3 @@ public sealed class ItVatCodeRecognizer(
         return c == sanitized[10] - '0';
     }
 }
-using System.Linq;

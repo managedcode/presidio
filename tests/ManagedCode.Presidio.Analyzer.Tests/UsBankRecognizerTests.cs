@@ -13,10 +13,10 @@ public sealed class UsBankRecognizerTests
         var results = recognizer.Analyze(text, new[] { "US_BANK_NUMBER" }, new NlpArtifacts("en")).ToList();
 
         var match = results.ShouldHaveSingleItem();
-        match.EntityType);
-        match.Score, 5.ShouldBe(0.05.ShouldBe("US_BANK_NUMBER");
-        match.Start);
-        match.End.ShouldBe(expectedEnd.ShouldBe(expectedStart);
+        match.EntityType.ShouldBe("US_BANK_NUMBER");
+        match.Score.ShouldBe(0.05, 5);
+        match.Start.ShouldBe(expectedStart);
+        match.End.ShouldBe(expectedEnd);
         text[match.Start..match.End].ShouldBe(expectedMatch);
     }
 

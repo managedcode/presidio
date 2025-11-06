@@ -1,3 +1,5 @@
+using ManagedCode.Presidio.Core;
+
 namespace ManagedCode.Presidio.Analyzer;
 
 /// <summary>
@@ -20,7 +22,7 @@ public abstract class RemoteRecognizer(
         IReadOnlyCollection<string> entities,
         NlpArtifacts artifacts);
 
-    public override IReadOnlyCollection<string> EnhanceUsingContext(
+    public override IReadOnlyCollection<RecognizerResult> EnhanceUsingContext(
         string text,
         IReadOnlyCollection<RecognizerResult> ownResults,
         IReadOnlyCollection<RecognizerResult> otherResults,
@@ -40,4 +42,3 @@ public abstract class RemoteRecognizer(
         return AnalyzeRemote(text, entities, artifacts);
     }
 }
-

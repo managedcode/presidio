@@ -28,13 +28,12 @@ public sealed class DateRecognizerTests
         using var engine = new AnalyzerEngine();
         var results = engine.Analyze(text, "en", new[] { "DATE_TIME" }).ToList();
 
-        bool Matches(RecognizerResult r) =>
+        var match = results.FirstOrDefault(r =>
             r.EntityType == "DATE_TIME" &&
-            Slice(text, r).Equals(expected, StringComparison.Ordinal);
+            Slice(text, r).Equals(expected, StringComparison.Ordinal));
 
-        results.ShouldContain(Matches);
-        var match = results.First(Matches);
-        match.Score.ShouldBe(expectedScore, 0.000_01);
+        match.ShouldNotBeNull();
+        match!.Score.ShouldBe(expectedScore, 0.000_01);
     }
 
     [Theory]

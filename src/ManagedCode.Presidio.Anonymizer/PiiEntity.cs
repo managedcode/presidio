@@ -3,19 +3,63 @@ using ManagedCode.Presidio.Core;
 namespace ManagedCode.Presidio.Anonymizer;
 
 /// <summary>
-/// Base entity describing a span of text targeted for anonymization.
+/// Base entity describing a span of text targeted for anonymization operations.
+/// Mirrors the mutable semantics of the Python implementation while exposing
+/// <see cref="TextSpan"/> for consumption by the C# port.
 /// </summary>
-public abstract class PiiEntity(TextSpan span, string entityType) : IEquatable<PiiEntity>, IComparable<PiiEntity>
+public abstract class PiiEntity : IEquatable<PiiEntity>, IComparable<PiiEntity>
 {
-    public TextSpan Span { get; } = span;
+    protected PiiEntity(int start, int end, string entityType)
+    {
+        Validators.ValidateParameterExists(start, "result", "start");
+        Validators.ValidateType(start, "start", typeof(int));
+        Validators.ValidateParameterExists(end, "result", "end");
+        Validators.ValidateType(end, "end", typeof(int));
+        Validators.ValidateParameterNotEmpty(entityType, "result", "entity_type");
 
-    public string EntityType { get; } = string.IsNullOrWhiteSpace(entityType)
-            ? throw new ArgumentException("Entity type must be provided.", nameof(entityType))
-            : entityType;
+        if (start < 0 || end < 0)
+        {
+            throw new InvalidParamException("Invalid input, result start and end must be positive");
+        }
+
+        if (start > end)
+        {
+            throw new InvalidParamException(
+                $"Invalid input, start index '{start}' must be smaller than end index '{end}'");
+        }
+
+        EntityType = entityType;
+        Span = new TextSpan(start, end);
+    }
+
+    protected PiiEntity(TextSpan span, string entityType)
+        : this(span.Start, span.End, entityType)
+    {
+    }
+
+    public string EntityType { get; }
 
     public int Start => Span.Start;
 
     public int End => Span.End;
+
+    public TextSpan Span { get; private set; }
+
+    public void UpdateSpan(int start, int end)
+    {
+        if (start < 0 || end < 0)
+        {
+            throw new InvalidParamException("Invalid input, result start and end must be positive");
+        }
+
+        if (start > end)
+        {
+            throw new InvalidParamException(
+                $"Invalid input, start index '{start}' must be smaller than end index '{end}'");
+        }
+
+        Span = new TextSpan(start, end);
+    }
 
     public int CompareTo(PiiEntity? other)
     {
@@ -24,7 +68,8 @@ public abstract class PiiEntity(TextSpan span, string entityType) : IEquatable<P
             return 1;
         }
 
-        return Span.CompareTo(other.Span);
+        var comparison = Start.CompareTo(other.Start);
+        return comparison != 0 ? comparison : End.CompareTo(other.End);
     }
 
     public bool Equals(PiiEntity? other)
@@ -39,14 +84,15 @@ public abstract class PiiEntity(TextSpan span, string entityType) : IEquatable<P
             return true;
         }
 
-        return Span.Equals(other.Span) && EntityType.Equals(other.EntityType, StringComparison.Ordinal);
+        return Start == other.Start && End == other.End &&
+               EntityType.Equals(other.EntityType, StringComparison.Ordinal);
     }
 
     public override bool Equals(object? obj) => Equals(obj as PiiEntity);
 
-    public override int GetHashCode() => HashCode.Combine(Span, EntityType);
+    public override int GetHashCode() => HashCode.Combine(Start, End, EntityType);
 
-    public override string ToString() => $"{EntityType} [{Span.Start}, {Span.End})";
+    public override string ToString() => $"{EntityType} [{Start}, {End})";
 
     public static bool operator >(PiiEntity left, PiiEntity right)
     {

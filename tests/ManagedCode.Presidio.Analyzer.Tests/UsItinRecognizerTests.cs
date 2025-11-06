@@ -18,12 +18,12 @@ public sealed class UsItinRecognizerTests
             .OrderBy(result => result.Start)
             .ToList();
 
-        results.Count);
+        results.Count.ShouldBe(expectedMatches.Length);
 
         for (var i = 0; i < expectedMatches.Length; i++)
         {
             var match = results[i];
-            match.EntityType.ShouldBe("US_ITIN".ShouldBe(expectedMatches.Length);
+            match.EntityType.ShouldBe("US_ITIN");
             match.Score.ShouldBe(expectedScores[i], 5);
             text[match.Start..match.End].ShouldBe(expectedMatches[i]);
         }
@@ -40,4 +40,3 @@ public sealed class UsItinRecognizerTests
         results.ShouldBeEmpty();
     }
 }
-
