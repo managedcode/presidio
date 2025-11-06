@@ -65,6 +65,82 @@ dotnet test Presidio.slnx --configuration Release
 
 > We always run `dotnet format` before `dotnet test` to ensure consistent styling across the solution.
 
+### Usage Examples
+
+The .NET APIs mirror the Python surface. The snippets below show the most common entry points.
+
+#### Anonymizing raw text
+
+```csharp
+using System.Collections.Generic;
+using ManagedCode.Presidio.Anonymizer;
+using ManagedCode.Presidio.Core;
+
+var recognizerResults = new[]
+{
+    new ManagedCode.Presidio.Core.RecognizerResult("PERSON", new TextSpan(11, 16), 0.85),
+};
+
+var anonymizer = new AnonymizerEngine();
+var result = anonymizer.Anonymize(
+    "My name is James Bond",
+    recognizerResults,
+    new Dictionary<string, OperatorConfig>
+    {
+        ["PERSON"] = new OperatorConfig("replace", new Dictionary<string, object?>
+        {
+            [ReplaceOperator.NewValueKey] = "Agent"
+        })
+    });
+
+// result.Text == "My name is Agent Bond"
+```
+
+#### Working with collections (BatchAnonymizerEngine)
+
+```csharp
+using System.Collections.Generic;
+using ManagedCode.Presidio.Anonymizer;
+
+var batch = new BatchAnonymizerEngine(anonymizer);
+
+var response = batch.AnonymizeDict(new[]
+{
+    new DictRecognizerResult(
+        "names",
+        new[] { "John", "Jill" },
+        new[]
+        {
+            new[] { new ManagedCode.Presidio.Anonymizer.RecognizerResult("PERSON", 0, 4, 0.9) },
+            new[] { new ManagedCode.Presidio.Anonymizer.RecognizerResult("PERSON", 0, 4, 0.9) },
+        })
+});
+
+// response["names"] == ["<PERSON>", "<PERSON>"]
+```
+
+#### Deanonymizing previously encrypted entities
+
+```csharp
+using System.Collections.Generic;
+using ManagedCode.Presidio.Anonymizer;
+
+var deanonymizer = new DeanonymizeEngine();
+
+var decrypted = deanonymizer.Deanonymize(
+    cipherText: "My name is S184CMt9Drj7QaKQ21JTrpYzghnboTF9pn/neN8JME0=",
+    entities: new[] { new OperatorResult(11, 55, "PERSON") },
+    operators: new Dictionary<string, OperatorConfig>
+    {
+        ["DEFAULT"] = new OperatorConfig("decrypt", new Dictionary<string, object?>
+        {
+            [EncryptOperator.KeyParameter] = "WmZq4t7w!z%C&F)J",
+        })
+    });
+
+// decrypted.Text == "My name is Chloë"
+```
+
 ---
 
 ## Python Reference Submodule
