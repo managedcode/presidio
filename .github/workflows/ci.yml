@@ -24,16 +24,16 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore Presidio.sln
+      run: dotnet restore Presidio.slnx
 
     - name: Verify formatting
-      run: dotnet format Presidio.sln --verify-no-changes
+      run: dotnet format Presidio.slnx --verify-no-changes
 
     - name: Build
-      run: dotnet build Presidio.sln --configuration Release --no-restore
+      run: dotnet build Presidio.slnx --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test Presidio.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      run: dotnet test Presidio.slnx --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
     - name: Upload coverage reports to Codecov
       if: always()
