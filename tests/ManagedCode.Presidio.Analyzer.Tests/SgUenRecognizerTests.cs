@@ -33,14 +33,11 @@ public sealed class SgUenRecognizerTests
         }
     }
 
-    public static TheoryData<string, int, (int, int)[]> GetCases()
+    public static IEnumerable<object[]> GetCases()
     {
-        var data = new TheoryData<string, int, (int, int)[]>();
         foreach (var (text, count, positions) in Cases)
         {
-            data.Add(text, count, positions);
+            yield return new object[] { text, count, positions };
         }
-
-        return data;
     }
 }

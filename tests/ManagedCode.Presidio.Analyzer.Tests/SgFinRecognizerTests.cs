@@ -36,14 +36,11 @@ public sealed class SgFinRecognizerTests
         }
     }
 
-    public static TheoryData<string, int, (int, int)[], (double, double)[]> GetCases()
+    public static IEnumerable<object[]> GetCases()
     {
-        var data = new TheoryData<string, int, (int, int)[], (double, double)[]>();
         foreach (var (text, count, positions, scores) in Cases)
         {
-            data.Add(text, count, positions, scores);
+            yield return new object[] { text, count, positions, scores };
         }
-
-        return data;
     }
 }
