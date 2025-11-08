@@ -9,7 +9,7 @@ public sealed class ItIdentityCardRecognizerTests
     {
         ("AA 1234567", 1, new[]{ (0,10) }, new[]{ (0.0, 0.05) }),
         ("AA 1234567 and AA 1234567", 2, new[]{ (0,10), (15,25) }, new[]{ (0.0, 0.05), (0.0, 0.05) }),
-        ("My identity number is AA 1234567", 1, new[]{ (21,32) }, new[]{ (0.0, 0.05) }),
+        ("My identity number is AA 1234567", 1, new[]{ (22,32) }, new[]{ (0.0, 0.05) }),
         ("AA123456", 0, Array.Empty<(int,int)>(), Array.Empty<(double,double)>()),
         ("1234567Aa", 1, new[]{ (0,9) }, new[]{ (0.0, 0.05) }),
         ("AA12345aa", 1, new[]{ (0,9) }, new[]{ (0.0, 0.05) }),

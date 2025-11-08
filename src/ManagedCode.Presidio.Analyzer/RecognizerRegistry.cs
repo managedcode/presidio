@@ -65,8 +65,7 @@ public sealed class RecognizerRegistry
         }
 
         var filtered = allFields
-            ? candidates.Where(recognizer =>
-                string.Equals(recognizer.SupportedLanguage, language, StringComparison.Ordinal))
+            ? candidates
             : candidates.Where(recognizer =>
                 string.Equals(recognizer.SupportedLanguage, language, StringComparison.Ordinal)
                 && recognizer.SupportedEntities.Intersect(entities ?? Array.Empty<string>(), StringComparer.Ordinal).Any());
@@ -129,12 +128,6 @@ public sealed class RecognizerRegistry
 
             foreach (var languageConfiguration in definition.Languages)
             {
-                if (languages is { Count: > 0 } &&
-                    !languages.Contains(languageConfiguration.Language, StringComparer.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
                 if (HasRecognizer(recognizerType, languageConfiguration.Language))
                 {
                     continue;

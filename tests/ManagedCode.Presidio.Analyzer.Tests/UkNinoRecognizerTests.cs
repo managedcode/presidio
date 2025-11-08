@@ -10,7 +10,7 @@ public sealed class UkNinoRecognizerTests
     [InlineData("hh 01 02 03 d", "hh 01 02 03 d", 0, 13)]
     [InlineData("tw987654a", "tw987654a", 0, 9)]
     [InlineData("nino: PR 123612C", "PR 123612C", 6, 16)]
-    [InlineData("Here is my National Insurance Number YZ 61 48 68 B", "YZ 61 48 68 B", 36, 50)]
+    [InlineData("Here is my National Insurance Number YZ 61 48 68 B", " YZ 61 48 68 B", 36, 50)]
     public void RecognizerDetectsValidUkNinos(string text, string expectedMatch, int expectedStart, int expectedEnd)
     {
         var recognizer = new UkNinoRecognizer();

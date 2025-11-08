@@ -170,19 +170,29 @@ public sealed class InVehicleRegistrationRecognizer(
     private static bool CheckVehicleRegistration(string value)
     {
         var sanitized = value.ToUpperInvariant();
-        if (sanitized.Length < 8)
+        if (sanitized.Length < 4)
         {
             return false;
+        }
+
+        if (sanitized.Length <= 7)
+        {
+            if (IsLegacyRegistration(sanitized))
+            {
+                return true;
+            }
+
+            return MatchesDiplomaticRegistration(sanitized);
         }
 
         var prefix = sanitized[..2];
         if (!TWO_FACTOR_REGISTRATION_PREFIX.Contains(prefix))
         {
-            return false;
+            return MatchesDiplomaticRegistration(sanitized);
         }
 
         var districtCode = string.Empty;
-        if (sanitized.Length > 2 && char.IsDigit(sanitized[2]))
+        if (char.IsDigit(sanitized[2]))
         {
             if (sanitized.Length > 3 && char.IsDigit(sanitized[3]))
             {
@@ -192,11 +202,6 @@ public sealed class InVehicleRegistrationRecognizer(
             {
                 districtCode = sanitized[2].ToString();
             }
-        }
-
-        if (sanitized.Length < 4)
-        {
-            return false;
         }
 
         var registrationDigits = sanitized[^4..];
@@ -210,24 +215,74 @@ public sealed class InVehicleRegistrationRecognizer(
             return false;
         }
 
-        if (!string.IsNullOrEmpty(districtCode) && STATE_RTO_DISTRICT_SETS.TryGetValue(prefix, out var districts) && districts.Contains(districtCode))
+        if (!string.IsNullOrEmpty(districtCode))
+        {
+            if (STATE_RTO_DISTRICT_SETS.TryGetValue(prefix, out var districts) && districts.Contains(districtCode))
+            {
+                return true;
+            }
+
+            if (int.TryParse(districtCode, out var districtNumber) && districtNumber is >= 1 and <= 99)
+            {
+                return true;
+            }
+        }
+
+        return MatchesDiplomaticRegistration(sanitized);
+    }
+
+    private static bool IsLegacyRegistration(string sanitized)
+    {
+        if (sanitized.Length == 5 && char.IsLetter(sanitized[0]) && sanitized[1..].All(char.IsDigit))
         {
             return true;
         }
 
+        if (sanitized.Length == 6)
+        {
+            if (char.IsLetter(sanitized[0]) && sanitized[1..].All(char.IsDigit))
+            {
+                return true;
+            }
+
+            if (char.IsLetter(sanitized[0]) && char.IsLetter(sanitized[1]) && sanitized[2..].All(char.IsDigit))
+            {
+                return true;
+            }
+        }
+
+        if (sanitized.Length == 7 && sanitized.Take(3).All(char.IsLetter) && sanitized[3..].All(char.IsDigit))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool MatchesDiplomaticRegistration(string sanitized)
+    {
         foreach (var diplomaticCode in IN_VEHICLE_DIPLOMATIC_CODES)
         {
             var index = sanitized.IndexOf(diplomaticCode, StringComparison.Ordinal);
-            if (index >= 0)
+            if (index < 0)
             {
-                var vehiclePrefix = sanitized[..index];
-                if (vehiclePrefix.Length > 0 && vehiclePrefix.All(char.IsDigit) && int.TryParse(vehiclePrefix, out var numericPrefix))
-                {
-                    if ((numericPrefix >= 1 && numericPrefix <= 80) || IN_VEHICLE_FOREIGN_MISSION_CODES_SET.Contains(numericPrefix))
-                    {
-                        return true;
-                    }
-                }
+                continue;
+            }
+
+            var vehiclePrefix = sanitized[..index];
+            if (vehiclePrefix.Length == 0 || !vehiclePrefix.All(char.IsDigit))
+            {
+                continue;
+            }
+
+            if (!int.TryParse(vehiclePrefix, out var numericPrefix))
+            {
+                continue;
+            }
+
+            if ((numericPrefix >= 1 && numericPrefix <= 80) || IN_VEHICLE_FOREIGN_MISSION_CODES_SET.Contains(numericPrefix))
+            {
+                return true;
             }
         }
 
