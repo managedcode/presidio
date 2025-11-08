@@ -52,11 +52,11 @@ public sealed class RecognizerRegistryProviderTests
         recognizers.Any(recognizer => recognizer is ThTninRecognizer { SupportedLanguage: "th" }).ShouldBeTrue();
         recognizers.Any(recognizer => recognizer is KrRrnRecognizer { SupportedLanguage: "ko" }).ShouldBeTrue();
 
-        var creditCard = recognizers.Single(r => r is CreditCardRecognizer);
+        var creditCard = recognizers.Single(r => r is CreditCardRecognizer { SupportedLanguage: "en" });
         creditCard.Context.ShouldContain("credit");
         creditCard.Context.ShouldContain("visa");
 
-        var passportRecognizer = recognizers.Single(r => r is UsPassportRecognizer);
+        var passportRecognizer = recognizers.Single(r => r is UsPassportRecognizer { SupportedLanguage: "en" });
         passportRecognizer.Context.ShouldContain("passport");
     }
 }

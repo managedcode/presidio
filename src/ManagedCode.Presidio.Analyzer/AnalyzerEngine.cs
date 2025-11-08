@@ -103,7 +103,14 @@ public sealed class AnalyzerEngine : IDisposable
             entities = GetSupportedEntities(language);
         }
 
-        nlpArtifacts ??= _nlpEngine.ProcessText(text, language);
+        try
+        {
+            nlpArtifacts ??= _nlpEngine.ProcessText(text, language);
+        }
+        catch (NotSupportedException ex) when (ex.Message.Contains("Language", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("No matching recognizers were found to serve the request.", ex);
+        }
         if (_logDecisionProcess)
         {
             _appTracer.Trace(correlationId, $"nlp_artifacts: {nlpArtifacts.ToJson()}");
