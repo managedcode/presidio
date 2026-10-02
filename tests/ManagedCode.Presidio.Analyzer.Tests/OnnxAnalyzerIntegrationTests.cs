@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Shouldly;
 using Xunit;
-using Xunit.Sdk;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
 
@@ -14,7 +13,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     private static readonly string[] NoMatchAllowList = { "Donna" };
     private static readonly string[] AllEntitiesAllowList = { "Sharon", "Seattle" };
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRecognizesPersonAndLocationFromPythonTestFixture()
     {
         var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_analyzer_engine.py");
@@ -31,7 +30,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRecognizesPersonAndLocationFromStanzaSample()
     {
         var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_stanza_nlp_engine.py");
@@ -48,7 +47,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => r.EntityType == "LOCATION" && Slice(sample, r).Equals("Hawaii", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelFiltersToRequestedEntities()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -66,7 +65,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldNotContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelReturnsAllEntitiesWhenFilterIsEmpty()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -78,7 +77,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => r.EntityType == "LOCATION");
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelReturnsNoResultsForEmptyText()
     {
         using var engine = CreateOnnxAnalyzer();
@@ -87,7 +86,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldBeEmpty();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelThrowsForUnsupportedLanguage()
     {
         using var engine = CreateOnnxAnalyzer();
@@ -96,7 +95,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelHonorsExactAllowList()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -108,7 +107,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelHonorsRegexAllowList()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -125,7 +124,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldBeEmpty();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRegexAllowListRespectsCaseSensitivity()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -153,7 +152,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         sensitive.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.Ordinal));
     }
 
-    [Theory]
+    [LocalOnnxTheory]
     [InlineData("uk")]
     [InlineData("ja")]
     [InlineData("ko")]
@@ -166,7 +165,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
     }
 
-    [Theory]
+    [LocalOnnxTheory]
     [InlineData("Je m'appelle François Dupont and I live in Paris.", "Paris")]
     [InlineData("Мій колега Олександр відвідав Київ.", "Київ")]
     [InlineData("私の同僚 Sato works in Tokyo.", "Tokyo")]
@@ -182,7 +181,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => r.EntityType == "LOCATION");
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelClearsAnalysisExplanationByDefault()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -197,7 +196,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         }
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRetainsAnalysisExplanationWhenRequested()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -212,7 +211,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         }
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRespectsHighScoreThreshold()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -226,7 +225,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         filtered.ShouldBeEmpty();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelIgnoresAllowListWhenNoMatches()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -238,7 +237,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldContain(r => Slice(sample, r).Equals("Seattle", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelRemovesAllEntitiesWhenAllowListCoversText()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -249,7 +248,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         results.ShouldBeEmpty();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelLoadsRecognizersOnDemand()
     {
         using var engine = CreateOnnxAnalyzer();
@@ -262,7 +261,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         recognizer.IsLoaded.ShouldBeTrue();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelPopulatesRecognizerMetadata()
     {
         const string sample = "My name is Sharon and I live in Seattle.";
@@ -283,7 +282,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         person.Metadata.ContainsKey("source").ShouldBeTrue();
     }
 
-    [Fact]
+    [LocalOnnxFact]
     public void OnnxModelReportsSupportedEntities()
     {
         using var engine = CreateOnnxAnalyzer();
@@ -305,17 +304,22 @@ public sealed class OnnxAnalyzerIntegrationTests
 
     private static AnalyzerEngine CreateOnnxAnalyzer()
     {
-        var modelPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_MODEL_PATH")
-            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "model.onnx");
-        var vocabularyPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_VOCAB_PATH")
-            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "vocab.txt");
-        var configurationPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_CONFIG_PATH")
-            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "config.json");
+        var modelPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_MODEL_PATH");
+        var vocabularyPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_VOCAB_PATH");
+        var configurationPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_CONFIG_PATH");
+
+        if (string.IsNullOrWhiteSpace(modelPath) ||
+            string.IsNullOrWhiteSpace(vocabularyPath) ||
+            string.IsNullOrWhiteSpace(configurationPath))
+        {
+            throw new InvalidOperationException(
+                "Configure all three local ONNX artifact paths: PRESIDIO_ONNX_MODEL_PATH, PRESIDIO_ONNX_VOCAB_PATH, and PRESIDIO_ONNX_CONFIG_PATH.");
+        }
 
         if (!File.Exists(modelPath) || !File.Exists(vocabularyPath) || !File.Exists(configurationPath))
         {
-            throw SkipException.ForSkip(
-                "ONNX integration cases require explicit local artifacts via PRESIDIO_ONNX_MODEL_PATH, PRESIDIO_ONNX_VOCAB_PATH, and PRESIDIO_ONNX_CONFIG_PATH.");
+            throw new FileNotFoundException(
+                "A configured local ONNX integration artifact does not exist. Check PRESIDIO_ONNX_MODEL_PATH, PRESIDIO_ONNX_VOCAB_PATH, and PRESIDIO_ONNX_CONFIG_PATH.");
         }
 
         var engine = new OnnxNlpEngine(new OnnxNlpEngineOptions
@@ -343,5 +347,44 @@ public sealed class OnnxAnalyzerIntegrationTests
         }
 
         throw new InvalidOperationException("Unable to locate repository root from test base directory.");
+    }
+}
+
+public sealed class LocalOnnxFactAttribute : FactAttribute
+{
+    public LocalOnnxFactAttribute()
+    {
+        if (!LocalOnnxArtifacts.IsConfigured())
+        {
+            Skip = LocalOnnxArtifacts.SkipReason;
+        }
+    }
+}
+
+public sealed class LocalOnnxTheoryAttribute : TheoryAttribute
+{
+    public LocalOnnxTheoryAttribute()
+    {
+        if (!LocalOnnxArtifacts.IsConfigured())
+        {
+            Skip = LocalOnnxArtifacts.SkipReason;
+        }
+    }
+}
+
+internal static class LocalOnnxArtifacts
+{
+    public const string SkipReason = "Optional ONNX tests require existing local artifacts configured with PRESIDIO_ONNX_MODEL_PATH, PRESIDIO_ONNX_VOCAB_PATH, and PRESIDIO_ONNX_CONFIG_PATH.";
+
+    public static bool IsConfigured()
+    {
+        var paths = new[]
+        {
+            Environment.GetEnvironmentVariable("PRESIDIO_ONNX_MODEL_PATH"),
+            Environment.GetEnvironmentVariable("PRESIDIO_ONNX_VOCAB_PATH"),
+            Environment.GetEnvironmentVariable("PRESIDIO_ONNX_CONFIG_PATH"),
+        };
+
+        return paths.Any(path => !string.IsNullOrWhiteSpace(path));
     }
 }
