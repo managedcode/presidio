@@ -40,6 +40,9 @@ Update guidelines:
 - for Presidio migration tasks, do not stop to ask the user for clarification mid-task; follow the migration plan and deliver completed work
 - for Presidio migration tasks, when the user says "продовжити"/"continue", proceed through the target file step by step without asking for additional confirmation
 - for Presidio migration tasks, when you see a way to improve something, note the idea in the working file and then implement it without waiting for user approval
+- the default `AnalyzerEngine` must not download or require model artifacts; ONNX NLP is opt-in and uses explicitly configured local model, vocabulary, and configuration files
+- when configuring a PII policy or requesting entities, validate every selected entity against recognizers available for the exact language and fail closed on unsupported selections
+- evaluation evidence sanitization is an explicit call over selected content; never wrap model clients or silently rewrite tool, authorization, or chat semantics
 - for Presidio migration tasks, default to continuing the migration workflow without waiting for "продовжити"/"continue"; halt only if the user explicitly redirects
 - for Presidio migration tasks, when the user specifies an execution order for follow-up work, honor that sequence without reconfirming and keep progressing task-by-task
 - for Presidio migration tasks, capture any important follow-up items directly in the working file as TODOs so they are not lost
@@ -56,37 +59,16 @@ Update guidelines:
 - `src/ManagedCode.Presidio.Core` – foundational domain objects such as `TextSpan`, `AnalysisExplanation`, `RecognizerResult`, and shared metadata keys.
 - `src/ManagedCode.Presidio.Analyzer` – analyzer abstractions (`EntityRecognizer`, `NlpArtifacts`, `Token`) with lazy-loading recognizer lifecycle management and ONNX-backed NER.
 - `src/ManagedCode.Presidio.Anonymizer` – anonymization primitives (`PiiEntity`, `OperatorConfig`, `OperatorResult`, `EngineResult`) mirroring the Python engine contracts.
-- `src/ManagedCode.Presidio.ImageRedactor` / `src/ManagedCode.Presidio.Structured` – placeholders for their respective pipelines.
+- `src/ManagedCode.Presidio.ImageRedactor` – image request/result and bounding-box models; OCR and redaction engines remain unported.
+- `src/ManagedCode.Presidio.Structured` – nested JSON string-field analysis, stream/path reading, and anonymization; uses RFC 6901 JSON Pointer paths and requires object or array roots.
 - `tests/*` – unit and integration suites covering the C# modules (including parity tests against Python behaviours).
 
 ## Current Status
 
-The core types compile and are covered by unit tests; the integration test suite validates parity of critical behaviours (e.g., `RecognizerResult` semantics) against scenarios captured in the original Python tests. The analyzer/anonymizer engines are intentionally skeletal and ready to receive the full algorithmic port.
+The repository has functioning analyzer and anonymizer pipelines, nested JSON analysis and transformation, and a Microsoft.Extensions.AI.Evaluation integration. The default analyzer uses deterministic recognizers in process and does not fetch a model. Optional ONNX NER requires local configured assets. `PLAN-MIGRATION.md` tracks parity gaps; no package should be described as complete while upstream capabilities remain absent.
 
 ## Next Steps
 
-### Phase 1 — Core Parity (in progress)
-- Mirror Python domain types (`RecognizerResult`, `PiiEntity`, `OperatorConfig`, etc.) and prove equivalence via integration tests that ingest canonical scenarios from `tests/` in the Python repo.
-- Expand the shared test harness to load JSON/YAML fixtures directly from `external/microsoft-presidio` for deterministic coverage.
-
-### Phase 2 — Analyzer Engine
-- Port `AnalyzerEngine`, `RecognizerRegistry`, pattern recognizers, and context enhancers.
-- Reproduce Python unit suites (`presidio-analyzer/tests`) as C# integration tests; compare scored outputs to golden data.
-- Introduce ONNX-backed NER execution (using models referenced in the Python repo) and abstract inference to enable GPU/CPU parity.
-
-### Phase 3 — Anonymizer Engine
-- Implement operator pipeline (mask, redact, hash, replace, FPE, etc.) and conflict resolution consistent with Python behaviour.
-- Backfill structured-data traversal and policy parsing; reuse original YAML policies as integration fixtures.
-
-### Phase 4 — Image & Structured Pipelines
-- Recreate image redaction and structured anonymization flows, focusing on API compatibility and deterministic output.
-- Add scenario tests leveraging sample images/JSON from the Python repository to verify pixel/record level transforms.
-
-### Phase 5 — Packaging & Tooling
-- Produce NuGet packages for core/analyzer/anonymizer components.
-- Expose minimal public APIs and documentation for consumption, and wire CI to publish artifacts.
-- Remove remaining Python scaffolding once feature parity and documentation are complete.
-
-This plan should be revisited at the end of each phase to incorporate learnings and refine subsequent milestones.
+Continue porting upstream analyzer, anonymizer, structured, and image scenarios with positive and negative evidence; keep exact known gaps in `PLAN-MIGRATION.md`. Do not make hosted recognizers, remote NLP providers, Python, or sidecars mandatory runtime dependencies. Run `dotnet format` before `dotnet test`; local runtime roll-forward is not proof of the native net9 CI gate. Release only after package artifacts, CI, GitHub release, and NuGet availability are verified.
 
 This file should be updated as major milestones are completed.

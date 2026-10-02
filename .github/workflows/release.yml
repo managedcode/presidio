@@ -46,6 +46,32 @@ jobs:
     - name: Pack NuGet packages
       run: dotnet pack Presidio.slnx --configuration Release --no-build --output ./artifacts
 
+    - name: Validate package set
+      env:
+        PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        expected=(
+          ManagedCode.Presidio.Core
+          ManagedCode.Presidio.Analyzer
+          ManagedCode.Presidio.Anonymizer
+          ManagedCode.Presidio.Structured
+          ManagedCode.Presidio.ImageRedactor
+          ManagedCode.Presidio.Evaluation
+        )
+        for package in "${expected[@]}"; do
+          artifact="./artifacts/${package}.${PACKAGE_VERSION}.nupkg"
+          if [ ! -f "$artifact" ]; then
+            echo "Missing expected package artifact: $artifact"
+            exit 1
+          fi
+        done
+        actual_count=$(find ./artifacts -maxdepth 1 -name '*.nupkg' | wc -l | tr -d ' ')
+        if [ "$actual_count" -ne "${#expected[@]}" ]; then
+          echo "Expected ${#expected[@]} package artifacts, found $actual_count"
+          exit 1
+        fi
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -82,45 +108,34 @@ jobs:
 
     - name: Publish to NuGet
       id: publish
-      continue-on-error: true
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       run: |
-        set +e
-        OUTPUT=""
+        set -euo pipefail
+        if [ -z "$NUGET_API_KEY" ]; then
+          echo "NUGET_API_KEY is not configured"
+          exit 1
+        fi
+
         PUBLISHED=false
 
         for package in ./artifacts/*.nupkg; do
           echo "Publishing $package..."
-          RESULT=$(dotnet nuget push "$package" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+          dotnet nuget push "$package" \
+            --api-key "$NUGET_API_KEY" \
             --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate 2>&1)
-          EXIT_CODE=$?
-          echo "$RESULT"
-          OUTPUT="$OUTPUT$RESULT"
-
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "Successfully published $package"
-            PUBLISHED=true
-          elif echo "$RESULT" | grep -q "already exists"; then
-            echo "Package already exists, skipping..."
-          else
-            echo "Failed to publish $package"
-            exit 1
-          fi
+            --skip-duplicate
+          PUBLISHED=true
         done
 
-        if [ "$PUBLISHED" = true ] || echo "$OUTPUT" | grep -q "Your package was pushed"; then
-          echo "published=true" >> $GITHUB_OUTPUT
-          echo "At least one package was successfully published"
-        else
-          echo "published=false" >> $GITHUB_OUTPUT
-          echo "No new packages were published (all already exist)"
-        fi
+        echo "published=$PUBLISHED" >> "$GITHUB_OUTPUT"
 
   create-release:
     name: Create GitHub Release and Tag
     needs: publish-nuget
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: needs.publish-nuget.outputs.published == 'true'
 
     steps:

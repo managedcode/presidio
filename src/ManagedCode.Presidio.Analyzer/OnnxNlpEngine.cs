@@ -197,7 +197,7 @@ public sealed class OnnxNlpEngine : INlpEngine
         BertTokenizer tokenizer,
         int maxSequenceLength)
     {
-        Span<int> buffer = tokenIds.Count + 2 <= 512
+        var buffer = tokenIds.Count + 2 <= 512
             ? stackalloc int[tokenIds.Count + 2]
             : new int[tokenIds.Count + 2];
 

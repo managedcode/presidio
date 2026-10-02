@@ -32,11 +32,8 @@ public sealed class OnnxNlpEngineFactory : INlpEngineFactory
             InputIdsName = ResolveRequiredMetadata(model, "input_ids_name", defaults.InputIdsName),
             AttentionMaskName = ResolveRequiredMetadata(model, "attention_mask_name", defaults.AttentionMaskName),
             TokenTypeIdsName = ResolveRequiredMetadata(model, "token_type_ids_name", defaults.TokenTypeIdsName),
-            ModelDownloadUri = ResolveUriMetadata(model, "model_download_uri", defaults.ModelDownloadUri),
             ModelChecksum = ResolveOptionalMetadata(model, "model_checksum", defaults.ModelChecksum),
-            VocabularyDownloadUri = ResolveUriMetadata(model, "vocabulary_download_uri", defaults.VocabularyDownloadUri),
             VocabularyChecksum = ResolveOptionalMetadata(model, "vocabulary_checksum", defaults.VocabularyChecksum),
-            ConfigurationDownloadUri = ResolveUriMetadata(model, "configuration_download_uri", defaults.ConfigurationDownloadUri),
             ConfigurationChecksum = ResolveOptionalMetadata(model, "configuration_checksum", defaults.ConfigurationChecksum),
         };
 
@@ -79,18 +76,4 @@ public sealed class OnnxNlpEngineFactory : INlpEngineFactory
         return defaultValue;
     }
 
-    private static Uri? ResolveUriMetadata(NlpModelConfiguration model, string key, Uri? defaultValue)
-    {
-        if (model.Metadata is null || !model.Metadata.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-        {
-            return defaultValue;
-        }
-
-        if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
-        {
-            return uri;
-        }
-
-        throw new InvalidOperationException($"Invalid URI '{value}' provided for metadata key '{key}'.");
-    }
 }

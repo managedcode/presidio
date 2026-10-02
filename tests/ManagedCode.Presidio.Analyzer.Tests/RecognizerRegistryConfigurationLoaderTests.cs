@@ -15,6 +15,7 @@ public sealed class RecognizerRegistryConfigurationLoaderTests
         configuration.SupportedLanguages.ShouldContain("en");
         configuration.GlobalRegexOptions.ShouldBe(
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline);
+        configuration.RegexMatchTimeout.ShouldBe(TimeSpan.FromMilliseconds(2_000));
 
         configuration.Recognizers.ShouldContain(definition => definition.Name == nameof(CreditCardRecognizer));
         configuration.Recognizers.ShouldContain(definition => definition.Name == nameof(UsPassportRecognizer));

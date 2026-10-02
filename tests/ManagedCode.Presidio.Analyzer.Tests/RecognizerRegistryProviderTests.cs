@@ -9,9 +9,10 @@ public sealed class RecognizerRegistryProviderTests
     public void CreateRecognizerRegistry_LoadsPredefinedRecognizersFromYaml()
     {
         var provider = new RecognizerRegistryProvider();
-        var registry = provider.CreateRecognizerRegistry(nlpEngine: null, supportedLanguages: new[] { "en" });
-
-        var recognizers = registry.GetRecognizers("en", allFields: true);
+        var registry = provider.CreateRecognizerRegistry(nlpEngine: null);
+        var recognizers = new[] { "en", "it", "es", "pl", "fi", "ko", "th" }
+            .SelectMany(language => registry.GetRecognizers(language, allFields: true))
+            .ToArray();
 
         recognizers.Any(recognizer => recognizer is CreditCardRecognizer { SupportedLanguage: "en" }).ShouldBeTrue();
         recognizers.Any(recognizer => recognizer is IbanRecognizer { SupportedLanguage: "en" }).ShouldBeTrue();

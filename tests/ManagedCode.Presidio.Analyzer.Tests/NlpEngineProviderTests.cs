@@ -11,12 +11,9 @@ public sealed class NlpEngineProviderTests
     {
         var provider = new NlpEngineProvider();
 
-        using var engine = provider.CreateEngine();
+        var exception = Should.Throw<FileNotFoundException>(provider.CreateEngine);
 
-        engine.IsLoaded.ShouldBeTrue();
-        engine.GetSupportedLanguages().ShouldContain("en");
-        var artifacts = engine.ProcessText("Hello world", "en");
-        artifacts.Language.ShouldBe("en");
+        exception.Message.ShouldContain("Missing local ONNX artifact");
     }
 
     [Fact]
@@ -38,10 +35,9 @@ models:
         try
         {
             var provider = new NlpEngineProvider(configurationPath: tempFile);
-            using var engine = provider.CreateEngine();
+            var exception = Should.Throw<FileNotFoundException>(provider.CreateEngine);
 
-            engine.IsLoaded.ShouldBeTrue();
-            engine.GetSupportedLanguages().ShouldContain("en");
+            exception.Message.ShouldContain(Path.Combine(Path.GetDirectoryName(tempFile)!, "models", "ner", "bert-base", "model.onnx"));
         }
         finally
         {

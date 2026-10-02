@@ -8,12 +8,14 @@
     <Project Path="src/ManagedCode.Presidio.Analyzer/ManagedCode.Presidio.Analyzer.csproj" />
     <Project Path="src/ManagedCode.Presidio.Anonymizer/ManagedCode.Presidio.Anonymizer.csproj" />
     <Project Path="src/ManagedCode.Presidio.Core/ManagedCode.Presidio.Core.csproj" />
+    <Project Path="src/ManagedCode.Presidio.Evaluation/ManagedCode.Presidio.Evaluation.csproj" />
     <Project Path="src/ManagedCode.Presidio.ImageRedactor/ManagedCode.Presidio.ImageRedactor.csproj" />
     <Project Path="src/ManagedCode.Presidio.Structured/ManagedCode.Presidio.Structured.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ManagedCode.Presidio.Analyzer.Tests/ManagedCode.Presidio.Analyzer.Tests.csproj" />
     <Project Path="tests/ManagedCode.Presidio.Anonymizer.Tests/ManagedCode.Presidio.Anonymizer.Tests.csproj" />
+    <Project Path="tests/ManagedCode.Presidio.Evaluation.Tests/ManagedCode.Presidio.Evaluation.Tests.csproj" />
     <Project Path="tests/ManagedCode.Presidio.Core.IntegrationTests/ManagedCode.Presidio.Core.IntegrationTests.csproj" />
     <Project Path="tests/ManagedCode.Presidio.Core.Tests/ManagedCode.Presidio.Core.Tests.csproj" />
     <Project Path="tests/ManagedCode.Presidio.ImageRedactor.Tests/ManagedCode.Presidio.ImageRedactor.Tests.csproj" />

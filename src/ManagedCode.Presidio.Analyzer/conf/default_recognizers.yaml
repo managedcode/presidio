@@ -1,6 +1,7 @@
 supported_languages:
   - en
 global_regex_flags: 26
+regex_match_timeout_ms: 2000
 
 recognizers:
   - name: CreditCardRecognizer
@@ -141,6 +142,11 @@ recognizers:
   - name: PlPeselRecognizer
     supported_languages:
       - pl
+    type: predefined
+
+  - name: FiPersonalIdentityCodeRecognizer
+    supported_languages:
+      - fi
     type: predefined
 
   - name: KrRrnRecognizer

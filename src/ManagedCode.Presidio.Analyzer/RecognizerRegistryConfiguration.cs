@@ -12,15 +12,28 @@ public sealed class RecognizerRegistryConfiguration(
     IReadOnlyCollection<string> supportedLanguages,
     RegexOptions globalRegexOptions,
     IReadOnlyCollection<RecognizerDefinition> recognizers,
-    string? source = null)
+    string? source = null,
+    TimeSpan? regexMatchTimeout = null)
 {
     public IReadOnlyCollection<string> SupportedLanguages { get; } = supportedLanguages ?? throw new ArgumentNullException(nameof(supportedLanguages));
 
     public RegexOptions GlobalRegexOptions { get; } = globalRegexOptions;
 
+    public TimeSpan RegexMatchTimeout { get; } = ValidateTimeout(regexMatchTimeout ?? TimeSpan.FromSeconds(2));
+
     public IReadOnlyCollection<RecognizerDefinition> Recognizers { get; } = recognizers ?? throw new ArgumentNullException(nameof(recognizers));
 
     public string? Source { get; } = source;
+
+    private static TimeSpan ValidateTimeout(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero || timeout == Regex.InfiniteMatchTimeout)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Regex match timeout must be finite and greater than zero.");
+        }
+
+        return timeout;
+    }
 }
 
 /// <summary>
@@ -117,13 +130,15 @@ internal static class RecognizerRegistryConfigurationLoader
 
         var supportedLanguages = ExtractSupportedLanguages(rootDictionary);
         var regexOptions = ExtractRegexOptions(rootDictionary);
+        var regexMatchTimeout = ExtractRegexMatchTimeout(rootDictionary);
         var recognizers = ExtractRecognizers(rootDictionary, supportedLanguages);
 
         return new RecognizerRegistryConfiguration(
             supportedLanguages,
             regexOptions,
             recognizers,
-            source);
+            source,
+            regexMatchTimeout);
     }
 
     private static IReadOnlyCollection<string> ExtractSupportedLanguages(IReadOnlyDictionary<string, object?> root)
@@ -160,6 +175,21 @@ internal static class RecognizerRegistryConfigurationLoader
         }
 
         return options;
+    }
+
+    private static TimeSpan ExtractRegexMatchTimeout(IReadOnlyDictionary<string, object?> root)
+    {
+        if (!root.TryGetValue("regex_match_timeout_ms", out var value) || value is not int timeoutMilliseconds)
+        {
+            throw new InvalidOperationException("The 'regex_match_timeout_ms' setting must be a finite positive integer.");
+        }
+
+        if (timeoutMilliseconds <= 0)
+        {
+            throw new InvalidOperationException("The 'regex_match_timeout_ms' setting must be greater than zero.");
+        }
+
+        return TimeSpan.FromMilliseconds(timeoutMilliseconds);
     }
 
     private static IReadOnlyCollection<RecognizerDefinition> ExtractRecognizers(

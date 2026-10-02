@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Shouldly;
 using Xunit;
+using Xunit.Sdk;
 
 namespace ManagedCode.Presidio.Analyzer.Tests;
 
@@ -23,7 +24,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         const string sample = "My name is Sharon and I live in Seattle.";
         pythonContent.ShouldContain(sample);
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en").ToList();
 
         results.ShouldContain(r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
@@ -40,7 +41,7 @@ public sealed class OnnxAnalyzerIntegrationTests
         const string sample = "Barack Obama was born in Hawaii.";
         pythonContent.ShouldContain(sample);
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en").ToList();
 
         results.ShouldContain(r => r.EntityType == "PERSON" && Slice(sample, r).Equals("Barack Obama", StringComparison.OrdinalIgnoreCase));
@@ -52,7 +53,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", PersonEntities).ToList();
 
         results.ShouldNotBeEmpty();
@@ -70,7 +71,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", Array.Empty<string>()).ToList();
 
         results.ShouldContain(r => r.EntityType == "PERSON");
@@ -80,7 +81,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [Fact]
     public void OnnxModelReturnsNoResultsForEmptyText()
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(string.Empty, "en").ToList();
 
         results.ShouldBeEmpty();
@@ -89,7 +90,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [Fact]
     public void OnnxModelThrowsForUnsupportedLanguage()
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
 
         var exception = Should.Throw<InvalidOperationException>(() => engine.Analyze("John lives in Berlin.", "de").ToList());
         exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
@@ -100,7 +101,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", allowList: ExactAllowList).ToList();
 
         results.ShouldNotContain(r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
@@ -112,7 +113,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(
                 sample,
                 "en",
@@ -129,7 +130,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var insensitive = engine.Analyze(
                 sample,
                 "en",
@@ -159,7 +160,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [InlineData("fr")]
     public void OnnxModelRejectsUnsupportedLanguages(string language)
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
 
         var exception = Should.Throw<InvalidOperationException>(() => engine.Analyze("Sample text", language).ToList());
         exception.Message.ShouldContain("No matching recognizers", Case.Sensitive);
@@ -172,7 +173,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [InlineData("My friend 민준 lives in Seoul.", "Seoul")]
     public void OnnxModelDetectsLocationsWithinInternationalText(string text, string expectedLocation)
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(text, "en").ToList();
 
         var expectedIndex = text.IndexOf(expectedLocation, StringComparison.OrdinalIgnoreCase);
@@ -186,7 +187,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en").ToList();
 
         results.ShouldNotBeEmpty();
@@ -201,7 +202,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", returnDecisionProcess: true).ToList();
 
         results.ShouldNotBeEmpty();
@@ -216,7 +217,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var baseline = engine.Analyze(sample, "en").ToList();
         var strictThreshold = baseline.Max(r => r.Score) + 0.001;
 
@@ -230,7 +231,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", allowList: NoMatchAllowList).ToList();
 
         results.ShouldContain(r => Slice(sample, r).Equals("Sharon", StringComparison.OrdinalIgnoreCase));
@@ -242,7 +243,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", allowList: AllEntitiesAllowList).ToList();
 
         results.ShouldBeEmpty();
@@ -251,7 +252,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [Fact]
     public void OnnxModelLoadsRecognizersOnDemand()
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var recognizer = engine.GetRecognizers("en").OfType<OnnxNerRecognizer>().Single();
 
         recognizer.IsLoaded.ShouldBeFalse();
@@ -266,7 +267,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     {
         const string sample = "My name is Sharon and I live in Seattle.";
 
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en", returnDecisionProcess: true).ToList();
 
         results.ShouldNotBeEmpty();
@@ -285,7 +286,7 @@ public sealed class OnnxAnalyzerIntegrationTests
     [Fact]
     public void OnnxModelReportsSupportedEntities()
     {
-        using var engine = new AnalyzerEngine();
+        using var engine = CreateOnnxAnalyzer();
         var supported = engine.GetSupportedEntities("en");
 
         supported.ShouldContain("PERSON");
@@ -300,6 +301,31 @@ public sealed class OnnxAnalyzerIntegrationTests
         }
 
         return text[result.Start..result.End];
+    }
+
+    private static AnalyzerEngine CreateOnnxAnalyzer()
+    {
+        var modelPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_MODEL_PATH")
+            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "model.onnx");
+        var vocabularyPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_VOCAB_PATH")
+            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "vocab.txt");
+        var configurationPath = Environment.GetEnvironmentVariable("PRESIDIO_ONNX_CONFIG_PATH")
+            ?? Path.Combine(RepoRoot, "models", "ner", "bert-base", "config.json");
+
+        if (!File.Exists(modelPath) || !File.Exists(vocabularyPath) || !File.Exists(configurationPath))
+        {
+            throw SkipException.ForSkip(
+                "ONNX integration cases require explicit local artifacts via PRESIDIO_ONNX_MODEL_PATH, PRESIDIO_ONNX_VOCAB_PATH, and PRESIDIO_ONNX_CONFIG_PATH.");
+        }
+
+        var engine = new OnnxNlpEngine(new OnnxNlpEngineOptions
+        {
+            ModelPath = modelPath,
+            VocabularyPath = vocabularyPath,
+            ConfigurationPath = configurationPath,
+        });
+
+        return new AnalyzerEngine(nlpEngine: engine);
     }
 
     private static string FindRepoRoot()

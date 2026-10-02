@@ -8,8 +8,10 @@ namespace ManagedCode.Presidio.Analyzer;
 /// </summary>
 public class PatternRecognizer : LocalRecognizer
 {
+    private static readonly TimeSpan DefaultRegexMatchTimeout = TimeSpan.FromSeconds(2);
     private readonly IReadOnlyList<Pattern> _patterns;
     private RegexOptions _globalRegexOptions;
+    private TimeSpan _regexMatchTimeout;
     private readonly IReadOnlyList<string> _context;
     private readonly List<CompiledPattern> _compiledPatterns;
 
@@ -22,7 +24,8 @@ public class PatternRecognizer : LocalRecognizer
         string supportedLanguage = "en",
         double denyListScore = 1.0,
         RegexOptions? globalRegexOptions = null,
-        string version = "0.0.1")
+        string version = "0.0.1",
+        TimeSpan? regexMatchTimeout = null)
         : base(new[] { supportedEntity }, name, supportedLanguage, version, context)
     {
         if (string.IsNullOrWhiteSpace(supportedEntity))
@@ -45,6 +48,7 @@ public class PatternRecognizer : LocalRecognizer
         _patterns = patternList;
         _context = context?.ToArray() ?? Array.Empty<string>();
         _globalRegexOptions = globalRegexOptions ?? (RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline);
+        _regexMatchTimeout = ValidateRegexMatchTimeout(regexMatchTimeout ?? DefaultRegexMatchTimeout);
         _compiledPatterns = _patterns.Select(pattern => new CompiledPattern(pattern)).ToList();
     }
 
@@ -56,7 +60,7 @@ public class PatternRecognizer : LocalRecognizer
         var results = new List<RecognizerResult>();
         foreach (var compiled in _compiledPatterns)
         {
-            var regex = compiled.GetRegex(_globalRegexOptions);
+            var regex = compiled.GetRegex(_globalRegexOptions, _regexMatchTimeout);
             var matches = regex.Matches(text ?? string.Empty);
             foreach (Match match in matches)
             {
@@ -119,6 +123,21 @@ public class PatternRecognizer : LocalRecognizer
         _globalRegexOptions = options;
     }
 
+    internal void SetRegexMatchTimeout(TimeSpan timeout)
+    {
+        _regexMatchTimeout = ValidateRegexMatchTimeout(timeout);
+    }
+
+    private static TimeSpan ValidateRegexMatchTimeout(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero || timeout == Regex.InfiniteMatchTimeout)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Regex match timeout must be finite and greater than zero.");
+        }
+
+        return timeout;
+    }
+
     protected static AnalysisExplanation BuildRegexExplanation(
         string recognizerName,
         string patternName,
@@ -165,12 +184,15 @@ public class PatternRecognizer : LocalRecognizer
 
         public Pattern Pattern { get; } = pattern;
 
-        public Regex GetRegex(RegexOptions options)
+        private TimeSpan _timeout;
+
+        public Regex GetRegex(RegexOptions options, TimeSpan timeout)
         {
-            if (_compiledRegex is null || _options != options)
+            if (_compiledRegex is null || _options != options || _timeout != timeout)
             {
-                _compiledRegex = new Regex(Pattern.Regex, options);
+                _compiledRegex = new Regex(Pattern.Regex, options, timeout);
                 _options = options;
+                _timeout = timeout;
             }
 
             return _compiledRegex;

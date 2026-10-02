@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ManagedCode.Presidio.Evaluation</RootNamespace>
+    <AssemblyName>ManagedCode.Presidio.Evaluation</AssemblyName>
+    <Description>Presidio evidence sanitization and Microsoft.Extensions.AI response privacy evaluation.</Description>
+    <PackageTags>managedcode;presidio;evaluation;privacy;pii;ai</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ManagedCode.Presidio.Analyzer/ManagedCode.Presidio.Analyzer.csproj" />
+    <ProjectReference Include="../ManagedCode.Presidio.Anonymizer/ManagedCode.Presidio.Anonymizer.csproj" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.AI.Evaluation" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.MD" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

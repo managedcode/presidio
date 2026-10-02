@@ -16,17 +16,34 @@ public sealed class RecognizerRegistry
 
     public RecognizerRegistry(
         IEnumerable<EntityRecognizer>? recognizers = null,
-        IEnumerable<string>? supportedLanguages = null)
+        IEnumerable<string>? supportedLanguages = null,
+        TimeSpan? regexMatchTimeout = null)
     {
+        RegexMatchTimeout = ValidateRegexMatchTimeout(regexMatchTimeout ?? TimeSpan.FromSeconds(2));
         _recognizers = recognizers?.ToList() ?? new List<EntityRecognizer>();
         _supportedLanguages = supportedLanguages is null
             ? new HashSet<string>(_recognizers.Select(r => r.SupportedLanguage), StringComparer.OrdinalIgnoreCase)
             : new HashSet<string>(supportedLanguages, StringComparer.OrdinalIgnoreCase);
+        foreach (var recognizer in _recognizers)
+        {
+            ApplyGlobalRegexOptions(recognizer);
+        }
     }
 
     public IReadOnlyCollection<EntityRecognizer> RegisteredRecognizers => _recognizers;
 
     public IReadOnlyCollection<string> SupportedLanguages => _supportedLanguages;
+
+    public TimeSpan RegexMatchTimeout { get; private set; } = TimeSpan.FromSeconds(2);
+
+    public void SetRegexMatchTimeout(TimeSpan timeout)
+    {
+        RegexMatchTimeout = ValidateRegexMatchTimeout(timeout);
+        foreach (var recognizer in _recognizers)
+        {
+            ApplyGlobalRegexOptions(recognizer);
+        }
+    }
 
     public void AddRecognizer(EntityRecognizer recognizer)
     {
@@ -58,17 +75,33 @@ public sealed class RecognizerRegistry
             throw new ArgumentException("No entities provided.", nameof(entities));
         }
 
-        var candidates = new List<EntityRecognizer>(_recognizers);
-        if (adHocRecognizers is not null)
+        var candidates = _recognizers
+            .Concat(adHocRecognizers ?? Array.Empty<EntityRecognizer>())
+            .Where(recognizer => string.Equals(recognizer.SupportedLanguage, language, StringComparison.OrdinalIgnoreCase))
+            .Distinct()
+            .ToList();
+
+        if (!allFields)
         {
-            candidates.AddRange(adHocRecognizers);
+            var requestedEntities = entities ?? Array.Empty<string>();
+            var availableEntities = candidates.SelectMany(recognizer => recognizer.SupportedEntities)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unsupportedEntities = requestedEntities
+                .Where(entity => !availableEntities.Contains(entity))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (unsupportedEntities.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    $"No recognizers are configured for entity type(s) '{string.Join("', '", unsupportedEntities)}' in language '{language}'.");
+            }
         }
 
         var filtered = allFields
             ? candidates
             : candidates.Where(recognizer =>
-                string.Equals(recognizer.SupportedLanguage, language, StringComparison.Ordinal)
-                && recognizer.SupportedEntities.Intersect(entities ?? Array.Empty<string>(), StringComparer.Ordinal).Any());
+                recognizer.SupportedEntities.Intersect(entities ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase).Any());
 
         var result = filtered
             .Distinct()
@@ -87,7 +120,7 @@ public sealed class RecognizerRegistry
         var targetLanguages = (languages is null || languages.Count == 0) ? _supportedLanguages : languages;
 
         return _recognizers
-            .Where(recognizer => targetLanguages.Contains(recognizer.SupportedLanguage))
+            .Where(recognizer => targetLanguages.Contains(recognizer.SupportedLanguage, StringComparer.OrdinalIgnoreCase))
             .SelectMany(recognizer => recognizer.SupportedEntities)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
@@ -101,6 +134,7 @@ public sealed class RecognizerRegistry
         ArgumentNullException.ThrowIfNull(configuration);
 
         _globalRegexOptions = configuration.GlobalRegexOptions;
+        SetRegexMatchTimeout(configuration.RegexMatchTimeout);
         if (configuration.SupportedLanguages.Count > 0)
         {
             _supportedLanguages.UnionWith(configuration.SupportedLanguages);
@@ -115,16 +149,12 @@ public sealed class RecognizerRegistry
 
             if (!string.Equals(definition.Type, "predefined", StringComparison.OrdinalIgnoreCase))
             {
-                // TODO: support custom recognizer definitions (type: custom)
-                continue;
+                throw new NotSupportedException(
+                    $"Recognizer type '{definition.Type}' is not supported for enabled definition '{definition.Name}' in configuration '{configuration.Source}'.");
             }
 
-            var recognizerType = ResolveRecognizerType(definition.Name);
-            if (recognizerType is null)
-            {
-                // TODO: add logging once tracing infrastructure is in place.
-                continue;
-            }
+            var recognizerType = ResolveRecognizerType(definition.Name) ?? throw new InvalidOperationException(
+                    $"Configured recognizer '{definition.Name}' was not found in this assembly (configuration '{configuration.Source}').");
 
             foreach (var languageConfiguration in definition.Languages)
             {
@@ -133,11 +163,8 @@ public sealed class RecognizerRegistry
                     continue;
                 }
 
-                var recognizer = InstantiatePredefinedRecognizer(recognizerType, languageConfiguration);
-                if (recognizer is null)
-                {
-                    continue;
-                }
+                var recognizer = InstantiatePredefinedRecognizer(recognizerType, languageConfiguration) ?? throw new InvalidOperationException(
+                        $"Configured recognizer '{definition.Name}' could not be constructed for language '{languageConfiguration.Language}'.");
 
                 AddRecognizer(recognizer);
             }
@@ -294,6 +321,17 @@ public sealed class RecognizerRegistry
         if (recognizer is PatternRecognizer patternRecognizer)
         {
             patternRecognizer.SetGlobalRegexOptions(_globalRegexOptions);
+            patternRecognizer.SetRegexMatchTimeout(RegexMatchTimeout);
         }
+    }
+
+    private static TimeSpan ValidateRegexMatchTimeout(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero || timeout == Regex.InfiniteMatchTimeout)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Regex match timeout must be finite and greater than zero.");
+        }
+
+        return timeout;
     }
 }

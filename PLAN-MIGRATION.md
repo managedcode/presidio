@@ -16,8 +16,8 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | `Pattern` helper | `predefined_recognizers/generic/pattern_recognizer.py` | ✅ | Implemented as `Pattern` (C#) |
 | `PatternRecognizer` | same | ✅ | Implemented with regex caching & validation hooks |
 | `LocalRecognizer` / remote base classes | `local_recognizer.py`, `remote_recognizer.py` | ✅ | Ported as `LocalRecognizer`/`RemoteRecognizer` with unit coverage |
-| `RecognizerRegistry` & provider | `recognizer_registry.py` | ✅ | YAML-backed loader + reflective instantiation aligned with Python |
-| NLP engines (spaCy, transformers, etc.) | `nlp_engine/` | 🚧 | Only ONNX pipeline ported (`OnnxNlpEngine`) |
+| `RecognizerRegistry` & provider | `recognizer_registry.py` | 🚧 | YAML-backed loader is present and now fails closed for unsupported enabled definitions; batch/request API parity remains incomplete. |
+| NLP engines (spaCy, Stanza, transformers, etc.) | `nlp_engine/` | 🚧 | Optional local ONNX NER exists. The default analyzer has no model dependency and uses deterministic recognizers only. |
 
 ## Generic Recognizers
 
@@ -37,7 +37,7 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 
 | Country | Python Class | Status |
 | --- | --- | --- |
-| Australia | `AuAbnRecognizer`, `AuAcnRecognizer`, `AuMedicareRecognizer`, `AuTfnRecognizer` | ✅ |
+| Australia | `AuAbnRecognizer`, `AuAcnRecognizer`, `AuMedicareRecognizer`, `AuTfnRecognizer` | ✅ | ACN checksum has positive and negative upstream cases. |
 | Finland | `FiPersonalIdentityCodeRecognizer` | ✅ |
 | India | `InAadhaarRecognizer`, `InGstinRecognizer`, `InPanRecognizer`, `InPassportRecognizer`, `InVehicleRegistrationRecognizer`, `InVoterRecognizer` | ✅ |
 | Italy | `ItDriverLicenseRecognizer`, `ItFiscalCodeRecognizer`, `ItIdentityCardRecognizer`, `ItPassportRecognizer`, `ItVatCodeRecognizer` | ✅ |
@@ -47,13 +47,13 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 | Spain | `EsNieRecognizer`, `EsNifRecognizer` | ✅ |
 | Thailand | `ThTninRecognizer` | ✅ |
 | UK | `NhsRecognizer`, `UkNinoRecognizer` | ✅ |
-| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer`, `UsSsnRecognizer` | ✅ |
+| US | `MedicalLicenseRecognizer`, `UsBankRecognizer`, `UsLicenseRecognizer`, `UsItinRecognizer`, `UsPassportRecognizer`, `UsSsnRecognizer` | 🚧 | Driver-license patterns exist; more upstream scenario and context parity is needed. |
 
 ## NLP Engine Recognizers
 
 | Recognizer | Status | Notes |
 | --- | --- | --- |
-| ONNX NER (`OnnxNerRecognizer`) | ✅ | Ported and default for English |
+| ONNX NER (`OnnxNerRecognizer`) | 🚧 | Optional and requires explicitly available local model, vocabulary, and configuration files. |
 | spaCy / Stanza recognizers | 🚧 | Need integration once NLP bindings exist |
 | Transformers recognizer | 🚧 | Evaluate after deciding on ML stack |
 | GLiNER recognizer | 🚧 | Depends on GLiNER .NET availability |
@@ -62,11 +62,24 @@ This document tracks parity work between `external/microsoft-presidio` (Python) 
 
 | Recognizer | Status | Notes |
 | --- | --- | --- |
-| Azure Health De-ID (`AzureHealthDeidRecognizer`) | ❓ | Requires remote API integration |
-| Azure AI Language (`AzureAILanguageRecognizer`) | ❓ | Pending decision |
+| Azure Health De-ID (`AzureHealthDeidRecognizer`) | Excluded | Cloud-specific backend is outside this in-process port. |
+| Azure AI Language (`AzureAILanguageRecognizer`) | Excluded | Cloud-specific backend is outside this in-process port. |
+
+## Anonymizer Status
+
+The operator pipeline includes keep, redact, mask, replace, hash, encrypt, and decrypt. AHDS surrogate/deanonymize-keep behavior and some operator/parameter parity remain unported; this is not full anonymizer parity.
+
+## Structured Status
+
+`ManagedCode.Presidio.Structured` analyzes nested JSON string values into entity mappings, reads JSON, and applies the existing anonymizer pipeline to a cloned JSON tree. Entity mapping keys use RFC 6901 JSON Pointers (for example, `/contacts/0/email`) so property names containing dots or slashes remain unambiguous. The API accepts object and array roots and rejects primitive roots. Python DataFrame/Pandas analysis, sampling strategies, CSV reader parity, and broader upstream structured APIs remain incomplete.
+
+## Image Redactor Status
+
+Only image request/result and bounding-box models are ported. OCR engines, image processing, redaction, DICOM, and verification paths from `presidio-image-redactor` remain unported. The package is not a complete image-redaction implementation.
 
 ## Next Actions
 
-- Continue porting any remaining country-specific recognizers not yet covered (e.g., Australia-specific business identifiers beyond the current scope, additional EU IDs, etc.).
+- Continue adding supported local recognizers and port their upstream positive and negative scenarios.
 - Prioritize recognizer backlog based on customer demand and add coverage tests alongside each port.
-- Implement .NET equivalents for spaCy/Stanza/Transformers NLP engines or design alternative pipelines that meet parity guarantees.
+- Complete JSON collection semantics and native CSV/tabular support without requiring Python or remote services.
+- Investigate local OCR/image dependencies before describing image redaction as supported.

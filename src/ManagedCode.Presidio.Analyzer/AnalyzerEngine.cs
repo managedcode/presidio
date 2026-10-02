@@ -9,7 +9,7 @@ namespace ManagedCode.Presidio.Analyzer;
 public sealed class AnalyzerEngine : IDisposable
 {
     private readonly RecognizerRegistry _registry;
-    private readonly INlpEngine _nlpEngine;
+    private readonly INlpEngine? _nlpEngine;
     private readonly AppTracer _appTracer;
     private readonly bool _logDecisionProcess;
     private readonly double _defaultScoreThreshold;
@@ -23,13 +23,14 @@ public sealed class AnalyzerEngine : IDisposable
         bool logDecisionProcess = false,
         double defaultScoreThreshold = 0,
         IReadOnlyCollection<string>? supportedLanguages = null,
-        ContextAwareEnhancer? contextAwareEnhancer = null)
+        ContextAwareEnhancer? contextAwareEnhancer = null,
+        TimeSpan? regexMatchTimeout = null)
     {
         _supportedLanguages = supportedLanguages is { Count: > 0 }
             ? supportedLanguages
             : new[] { "en" };
 
-        _nlpEngine = nlpEngine ?? new NlpEngineProvider().CreateEngine();
+        _nlpEngine = nlpEngine;
         EnsureNlpEngineLoaded();
 
         _appTracer = appTracer ?? new AppTracer();
@@ -50,6 +51,11 @@ public sealed class AnalyzerEngine : IDisposable
             }
 
             _registry = registry;
+        }
+
+        if (regexMatchTimeout.HasValue)
+        {
+            _registry.SetRegexMatchTimeout(regexMatchTimeout.Value);
         }
 
         _contextAwareEnhancer = contextAwareEnhancer ?? new LemmaContextAwareEnhancer();
@@ -105,7 +111,7 @@ public sealed class AnalyzerEngine : IDisposable
 
         try
         {
-            nlpArtifacts ??= _nlpEngine.ProcessText(text, language);
+            nlpArtifacts ??= _nlpEngine?.ProcessText(text, language) ?? new NlpArtifacts(language);
         }
         catch (NotSupportedException ex) when (ex.Message.Contains("Language", StringComparison.OrdinalIgnoreCase))
         {
@@ -163,7 +169,7 @@ public sealed class AnalyzerEngine : IDisposable
 
     public void Dispose()
     {
-        _nlpEngine.Dispose();
+        _nlpEngine?.Dispose();
     }
 
     private static void AddRecognizerMetadata(IEnumerable<RecognizerResult> results, EntityRecognizer recognizer)
@@ -248,7 +254,7 @@ public sealed class AnalyzerEngine : IDisposable
 
     private void EnsureNlpEngineLoaded()
     {
-        if (!_nlpEngine.IsLoaded)
+        if (_nlpEngine is { IsLoaded: false })
         {
             _nlpEngine.Load();
         }
