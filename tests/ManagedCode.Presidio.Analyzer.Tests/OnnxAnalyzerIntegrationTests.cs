@@ -6,7 +6,6 @@ namespace ManagedCode.Presidio.Analyzer.Tests;
 
 public sealed class OnnxAnalyzerIntegrationTests
 {
-    private static readonly string RepoRoot = FindRepoRoot();
     private static readonly string[] PersonEntities = { "PERSON" };
     private static readonly string[] ExactAllowList = { "Sharon" };
     private static readonly string[] RegexAllowList = { "sharon", "seattle" };
@@ -14,14 +13,9 @@ public sealed class OnnxAnalyzerIntegrationTests
     private static readonly string[] AllEntitiesAllowList = { "Sharon", "Seattle" };
 
     [LocalOnnxFact]
-    public void OnnxModelRecognizesPersonAndLocationFromPythonTestFixture()
+    public void OnnxModelRecognizesPersonAndLocationFromAnalyzerScenario()
     {
-        var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_analyzer_engine.py");
-        File.Exists(pythonTestPath).ShouldBeTrue();
-
-        var pythonContent = File.ReadAllText(pythonTestPath);
         const string sample = "My name is Sharon and I live in Seattle.";
-        pythonContent.ShouldContain(sample);
 
         using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en").ToList();
@@ -31,14 +25,9 @@ public sealed class OnnxAnalyzerIntegrationTests
     }
 
     [LocalOnnxFact]
-    public void OnnxModelRecognizesPersonAndLocationFromStanzaSample()
+    public void OnnxModelRecognizesPersonAndLocationFromSecondSample()
     {
-        var pythonTestPath = Path.Combine(RepoRoot, "external", "microsoft-presidio", "presidio-analyzer", "tests", "test_stanza_nlp_engine.py");
-        File.Exists(pythonTestPath).ShouldBeTrue();
-
-        var pythonContent = File.ReadAllText(pythonTestPath);
         const string sample = "Barack Obama was born in Hawaii.";
-        pythonContent.ShouldContain(sample);
 
         using var engine = CreateOnnxAnalyzer();
         var results = engine.Analyze(sample, "en").ToList();
@@ -330,23 +319,6 @@ public sealed class OnnxAnalyzerIntegrationTests
         });
 
         return new AnalyzerEngine(nlpEngine: engine);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var directory = AppContext.BaseDirectory;
-        while (!string.IsNullOrEmpty(directory))
-        {
-            if (File.Exists(Path.Combine(directory, "Presidio.sln")) ||
-                File.Exists(Path.Combine(directory, "Presidio.slnx")))
-            {
-                return directory;
-            }
-
-            directory = Directory.GetParent(directory)?.FullName ?? string.Empty;
-        }
-
-        throw new InvalidOperationException("Unable to locate repository root from test base directory.");
     }
 }
 

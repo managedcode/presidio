@@ -1,3 +1,0 @@
-[submodule "external/microsoft-presidio"]
-	path = external/microsoft-presidio
-	url = https://github.com/microsoft/presidio.git

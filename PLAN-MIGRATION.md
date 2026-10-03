@@ -1,6 +1,6 @@
 # Presidio .NET Migration Plan
 
-This document tracks parity work between `external/microsoft-presidio` (Python) and the C# port.
+This document tracks behavior ported from Microsoft's Presidio project into the C# implementation. Source paths in the tables are relative to the upstream repository and revision documented in [UPSTREAM-PROVENANCE.md](UPSTREAM-PROVENANCE.md); upstream source is not included in the active tree.
 
 ## Status Legend
 

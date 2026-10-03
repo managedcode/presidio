@@ -1,7 +1,7 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
-This project incorporates components from the projects listed below. The original copyright notices and the licenses under which Microsoft received such components are set forth below. Microsoft reserves all rights not expressly granted herein, whether by implication, estoppel or otherwise.
+This file preserves third-party notices carried by Microsoft's upstream Presidio project, from which the ManagedCode C#/.NET port is derived. The listed notices provide attribution for the upstream source baseline; they do not assert that those upstream dependencies are included in or required by the .NET packages. The original copyright notices and licenses are retained below. Microsoft reserves all rights not expressly granted herein, whether by implication, estoppel or otherwise.
 
 *******
 azuure-ai-formrecognizer

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document tracks the migration of the legacy Python Presidio implementation to a .NET 9 codebase. ManagedCode maintains this .NET port, with the canonical Python sources vendored via the `external/microsoft-presidio` submodule serving as the authoritative reference while we build the C# implementation.
+This document guides the C#/.NET port of Microsoft's Presidio project. ManagedCode maintains the port; upstream repository identity, baseline revision, and license are recorded in `UPSTREAM-PROVENANCE.md`. The active tree contains the .NET implementation, tests, and tooling only.
 
 # Conversations
 
@@ -29,12 +29,12 @@ Update guidelines:
 ---
 
 ## Rules To Follow
-- for Presidio migration tasks, ALWAYS mirror functionality, tests, and docs from `external/microsoft-presidio` to guarantee parity
+- for Presidio port tasks, compare behavior with the upstream source revision recorded in `UPSTREAM-PROVENANCE.md`; do not add upstream-language source, examples, tests, or tools to the active tree
 - for Presidio migration tasks, NEVER rely on stubs, mocks, or placeholder implementations; deliver the full real functionality
 - for Presidio migration NLP components, use `Microsoft.ML.Tokenizers` when implementing tokenization
 - for Presidio migration tasks, eliminate dependencies on `ManagedCode.Presidio.PythonBridge`; port required logic to C#
 - when selecting dependencies, prefer official NuGet packages under permissive licenses (MIT) that match upstream functionality
-- integration tests must cover real data from the original Python project to verify parity; ensure all tests pass without hacks
+- integration tests must use explicit native test data for upstream-derived scenarios and verify the real C# pipeline; tests must not read source files from an upstream language tree
 - for Presidio analyzer tests, NEVER add stubbed recognizer tests; port the Python scenarios to exercise the real analyzer pipeline end-to-end
 - for Presidio analyzer parity work, keep iterating without pausing for confirmation and focus solely on integration tests that validate real functionality
 - for Presidio migration tasks, do not stop to ask the user for clarification mid-task; follow the migration plan and deliver completed work

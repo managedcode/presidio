@@ -1,35 +1,29 @@
 # ManagedCode Presidio for .NET
 
-> **Status:** Early alpha. The API surface area is evolving while we complete the port from the Python reference implementation.
+> **Status:** Early alpha. Public APIs and upstream parity are still evolving.
 
 [![CI](https://github.com/managedcode/presidio/actions/workflows/ci.yml/badge.svg)](https://github.com/managedcode/presidio/actions/workflows/ci.yml)
 [![Release](https://github.com/managedcode/presidio/actions/workflows/release.yml/badge.svg)](https://github.com/managedcode/presidio/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-ManagedCode Presidio is the .NET 9 rewrite of Microsoft's [Presidio](https://github.com/microsoft/presidio) project.
-The original Python codebase remains the authoritative reference implementation and is vendored in this repository as a Git submodule under `external/microsoft-presidio`. Our goal is feature parity with the Python release while delivering first-class NuGet packages for .NET applications.
+ManagedCode Presidio is a C#/.NET fork and port of Microsoft's [Presidio](https://github.com/microsoft/presidio) privacy-protection project. The .NET implementation is maintained in this repository and distributed as NuGet packages. The original source revision used as the port's baseline is recorded in [UPSTREAM-PROVENANCE.md](https://github.com/managedcode/presidio/blob/main/UPSTREAM-PROVENANCE.md); upstream source files are not part of the active checkout. The port is not a line-for-line API mirror, and it does not claim complete upstream feature parity.
 
-The analyzer and anonymizer run in process. `AnalyzerEngine` uses configured deterministic recognizers by default and does not download NLP models. Optional ONNX NER requires local model artifacts. This port does not require Python, a sidecar, or a hosted AI service.
+Core PII analysis and anonymization execute in process. The default analyzer uses deterministic configured recognizers and does not download model artifacts. Optional ONNX NER can be enabled with explicitly configured local model, vocabulary, and configuration files. No Python runtime, sidecar, cloud recognizer, or hosted model service is required. Optional AI-facing evaluation integration uses Microsoft.Extensions.AI.Evaluation abstractions; sanitizer and evaluator behavior is explicit and does not rewrite model conversations or tool calls.
 
----
+## Current .NET surface
 
-## Solution Layout
+- **Core** provides shared text spans, recognition results, explanations, and metadata.
+- **Analyzer** provides the recognizer registry, deterministic pattern and checksum recognizers, and opt-in local ONNX NER.
+- **Anonymizer** provides text anonymization operators and batch/dictionary helpers.
+- **Structured** analyzes string values in nested JSON, reads JSON, and applies the anonymizer to a cloned JSON tree. Object and array roots are supported; mapping paths use RFC 6901 JSON Pointers.
+- **Evaluation** provides explicit evidence sanitization and a Microsoft.Extensions.AI.Evaluation `IEvaluator` privacy metric.
+- **ImageRedactor** currently provides image request/result and bounding-box data models only. OCR, image redaction, DICOM processing, and verification are not implemented by this package.
 
-- `Presidio.slnx` – Visual Studio / `dotnet` solution for all libraries and tests.
-- `src/ManagedCode.Presidio.Core` – cross-cutting primitives (`TextSpan`, `RecognizerResult`, `AnalysisExplanation`, etc.).
-- `src/ManagedCode.Presidio.Analyzer` – contracts for recognizers and NLP artefacts.
-- `src/ManagedCode.Presidio.Anonymizer` – operators, engine results, and shared anonymization abstractions.
-- `src/ManagedCode.Presidio.ImageRedactor` – image request/result and bounding-box primitives; OCR and redaction engines remain unported.
-- `src/ManagedCode.Presidio.Structured` – nested JSON analysis, reading, and anonymization.
-- `src/ManagedCode.Presidio.Evaluation` – explicit evidence sanitization and an `IEvaluator` privacy metric.
-- `tests/ManagedCode.Presidio.*` – unit and integration suites validating parity against the Python behaviour.
-- `external/microsoft-presidio` – Git submodule pointing at the upstream Python repository.
+The detailed component status and known gaps are maintained in [PLAN-MIGRATION.md](https://github.com/managedcode/presidio/blob/main/PLAN-MIGRATION.md). In particular, optional ONNX NLP does not imply that every upstream model or NLP backend is available.
 
----
+## NuGet packages
 
-## NuGet Packages
-
-The solution produces the following packages (versioned centrally via `Directory.Build.props`):
+The solution builds six packages, with version managed centrally in `Directory.Build.props`:
 
 - `ManagedCode.Presidio.Core`
 - `ManagedCode.Presidio.Analyzer`
@@ -38,66 +32,50 @@ The solution produces the following packages (versioned centrally via `Directory
 - `ManagedCode.Presidio.ImageRedactor`
 - `ManagedCode.Presidio.Evaluation`
 
-Publishing is handled by the `release.yml` GitHub workflow which runs on pushes to `main`.
+The [release workflow](https://github.com/managedcode/presidio/blob/main/.github/workflows/release.yml) builds and publishes the package set. Package installation and API compatibility should be checked against the published version available on NuGet; a local build is not a released package.
 
----
+## Requirements and setup
 
-## Getting Started
+- .NET SDK **9.0.301** (selected by `global.json`).
+- Git 2.35 or newer.
 
-### Prerequisites
-
-- .NET SDK **9.0.301** (configured via `global.json`).
-- Git 2.35+ with submodule support.
-- Optionally, Python 3.9+ if you need to run the original reference code or regenerate fixtures.
-
-### Clone the Repository
+Clone the .NET repository and restore its solution:
 
 ```bash
 git clone https://github.com/managedcode/presidio.git
 cd presidio
-git submodule update --init --recursive
-```
-
-### Build & Test
-
-```bash
 dotnet restore Presidio.slnx
-dotnet build Presidio.slnx --configuration Release
-dotnet format Presidio.slnx
-dotnet test Presidio.slnx --configuration Release
 ```
 
-Run `dotnet format Presidio.slnx` before `dotnet test Presidio.slnx --configuration Release`.
+No submodule initialization, Python installation, model download, or network AI service is needed for the default analyzer and anonymizer.
 
-### Usage Examples
+## Examples
 
-The .NET APIs mirror the Python surface. The snippets below show the most common entry points.
-
-#### Analyzing and anonymizing raw text
+### Analyze and anonymize text
 
 ```csharp
-using System.Collections.Generic;
 using ManagedCode.Presidio.Analyzer;
 using ManagedCode.Presidio.Anonymizer;
 
 using var analyzer = new AnalyzerEngine();
-var text = "Contact alice@example.org";
-var recognizerResults = analyzer.Analyze(text, "en", ["EMAIL_ADDRESS"]);
+const string text = "Contact alice@example.org";
+var findings = analyzer.Analyze(text, "en", ["EMAIL_ADDRESS"]);
+
 var anonymizer = new AnonymizerEngine();
 var result = anonymizer.Anonymize(
     text,
-    recognizerResults,
+    findings,
     new Dictionary<string, OperatorConfig>
     {
-        ["EMAIL_ADDRESS"] = new OperatorConfig("redact"),
+        ["EMAIL_ADDRESS"] = new("redact"),
     });
 
 // result.Text == "Contact "
 ```
 
-#### Sanitizing evaluation evidence
+### Sanitize selected evaluation evidence
 
-The optional Evaluation package accepts explicit entity types, language, and score threshold. It never rewrites chat messages or tool arguments implicitly.
+Sanitization is an explicit operation over selected text. Callers choose language, entity types, threshold, and replacement behavior; no chat, authorization, or tool semantics are changed implicitly.
 
 ```csharp
 using ManagedCode.Presidio.Analyzer;
@@ -115,96 +93,21 @@ var safeEvidence = sanitizer.Sanitize(
 // safeEvidence.Text == "The customer is <EMAIL_ADDRESS>"
 ```
 
-`PresidioPrivacyEvaluator` implements `Microsoft.Extensions.AI.Evaluation.IEvaluator`, scans only the assistant response, and emits a numeric count metric without copying detected values into metric text. It does not call a model.
+`PresidioPrivacyEvaluator` implements `Microsoft.Extensions.AI.Evaluation.IEvaluator`, scans assistant-response evidence, and reports a numeric finding count without copying detected values into metric text. It does not call a model.
 
-#### Working with collections (BatchAnonymizerEngine)
-
-```csharp
-using System.Collections.Generic;
-using ManagedCode.Presidio.Anonymizer;
-
-var batch = new BatchAnonymizerEngine(anonymizer);
-
-var response = batch.AnonymizeDict(new[]
-{
-    new DictRecognizerResult(
-        "names",
-        new[] { "John", "Jill" },
-        new[]
-        {
-            new[] { new ManagedCode.Presidio.Anonymizer.RecognizerResult("PERSON", 0, 4, 0.9) },
-            new[] { new ManagedCode.Presidio.Anonymizer.RecognizerResult("PERSON", 0, 4, 0.9) },
-        })
-});
-
-// response["names"] == ["<PERSON>", "<PERSON>"]
-```
-
-#### Deanonymizing previously encrypted entities
-
-```csharp
-using System.Collections.Generic;
-using ManagedCode.Presidio.Anonymizer;
-
-var deanonymizer = new DeanonymizeEngine();
-
-var decrypted = deanonymizer.Deanonymize(
-    cipherText: "My name is S184CMt9Drj7QaKQ21JTrpYzghnboTF9pn/neN8JME0=",
-    entities: new[] { new OperatorResult(11, 55, "PERSON") },
-    operators: new Dictionary<string, OperatorConfig>
-    {
-        ["DEFAULT"] = new OperatorConfig("decrypt", new Dictionary<string, object?>
-        {
-            [EncryptOperator.KeyParameter] = "WmZq4t7w!z%C&F)J",
-        })
-    });
-
-// decrypted.Text == "My name is Chloë"
-```
-
----
-
-## Python Reference Submodule
-
-The `external/microsoft-presidio` directory tracks the upstream Python implementation.
-Tests under `tests/ManagedCode.Presidio.Core.IntegrationTests` load fixtures derived from the Python suite to prove behavioural parity of key primitives. As the port progresses, more fixtures will be mirrored directly from the submodule so that regressions can be caught early.
-
-If you update the submodule revision, ensure you run:
+## Build and test
 
 ```bash
-git submodule update --remote external/microsoft-presidio
+dotnet restore Presidio.slnx
+dotnet build Presidio.slnx --configuration Release
+dotnet format Presidio.slnx --verify-no-changes
+dotnet test Presidio.slnx --configuration Release
 ```
 
-and commit the resulting SHA change.
+Format before running the full test suite. Optional ONNX tests use only local artifacts explicitly provided with `PRESIDIO_ONNX_MODEL_PATH`, `PRESIDIO_ONNX_VOCAB_PATH`, and `PRESIDIO_ONNX_CONFIG_PATH`. The suite skips those tests only when no paths are configured; configured but invalid paths fail.
 
----
+## Upstream attribution and license
 
-## Roadmap
+The port is derived from Microsoft's Presidio project, licensed under MIT. Its provenance is recorded in [UPSTREAM-PROVENANCE.md](https://github.com/managedcode/presidio/blob/main/UPSTREAM-PROVENANCE.md), and the original revision remains part of this repository's Git history without placing upstream Python source or tooling in the active tree. This project preserves the MIT license and applicable third-party notices in [LICENSE](https://github.com/managedcode/presidio/blob/main/LICENSE) and [NOTICE](https://github.com/managedcode/presidio/blob/main/NOTICE).
 
-1. **Core parity** – finalise domain primitives and validate them against Python fixtures.
-2. **Analyzer engine** – port recognizer registry, pattern recognizers, and ONNX-backed NER execution.
-3. **Anonymizer engine** – reproduce the operator pipeline, conflict resolution, and policy parsing.
-4. **Image/Structured pipelines** – deliver feature parity for image redaction and structured anonymisation flows.
-5. **Packaging** – stabilise public APIs, documentation, and automate NuGet publishing.
-
-The conversion does not yet claim full Python feature parity. Current implementation and known gaps are tracked in `PLAN-MIGRATION.md`.
-
----
-
-## Contributing
-
-We welcome pull requests and issues. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and follow the existing coding conventions (see `.editorconfig`).
-All code must target `.NET 9` and pass `dotnet format` + `dotnet test` before a PR can be merged.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## Maintainers
-
-ManagedCode SAS is the primary maintainer of this fork.
-For questions, please open a GitHub issue or contact the ManagedCode team.
+ManagedCode SAS maintains this fork. For contribution guidance, see [CONTRIBUTING.md](https://github.com/managedcode/presidio/blob/main/CONTRIBUTING.md).

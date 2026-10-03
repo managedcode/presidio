@@ -3,7 +3,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>ManagedCode.Presidio.ImageRedactor</RootNamespace>
     <AssemblyName>ManagedCode.Presidio.ImageRedactor</AssemblyName>
-    <Description>ManagedCode Presidio image redaction primitives and request structures.</Description>
+    <Description>ManagedCode Presidio image request, result, and bounding-box data models.</Description>
     <PackageTags>managedcode;presidio;image redaction;pii;privacy</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
