@@ -1,17 +1,17 @@
 <Project>
   <ItemGroup>
-    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.10.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.10.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="10.10.0" />
-    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="1.0.3" />
-    <PackageVersion Include="libphonenumber-csharp" Version="8.13.36" />
-    <PackageVersion Include="YamlDotNet" Version="15.1.2" />
-    <PackageVersion Include="Shouldly" Version="4.2.1" />
+    <PackageVersion Include="libphonenumber-csharp" Version="8.13.55" />
+    <PackageVersion Include="YamlDotNet" Version="15.3.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 </Project>
